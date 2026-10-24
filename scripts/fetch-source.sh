@@ -14,9 +14,11 @@ source_root="$work_root/source/$base_id"
 
 if [[ ! -d "$source_root/.git" ]]; then
   mkdir -p "$(dirname "$source_root")"
+  rm -rf "$source_root.partial"
   printf 'cloning %s %s\n' "$base_repository" "$base_tag" >&2
   git -c advice.detachedHead=false clone --quiet --recurse-submodules --branch "$base_tag" \
-    "$base_repository" "$source_root"
+    "$base_repository" "$source_root.partial"
+  mv "$source_root.partial" "$source_root"
 fi
 
 assert_base_checkout "$source_root"

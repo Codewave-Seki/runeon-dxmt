@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
+umask 022
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/.." && pwd)"
@@ -9,9 +10,10 @@ work_root="${RUNEON_DXMT_WORK_ROOT:-$repo_root/.work}"
 # The newest patch set unless RUNEON_DXMT_PATCHSET_DEFINITION selects another.
 patchset_definition="${RUNEON_DXMT_PATCHSET_DEFINITION:-}"
 if [[ -z "$patchset_definition" ]]; then
-  patchset_definition="$(cd "$repo_root" && ls -d patchsets/*/ 2>/dev/null | sort -V | tail -n 1)"
+  patchset_definition="$(cd "$repo_root" && ls -d patchsets/*/ 2>/dev/null | sort -V | tail -n 1 || true)"
   patchset_definition="${patchset_definition%/}"
 fi
+[[ -n "$patchset_definition" ]] || { printf 'error: no patch set under patchsets/\n' >&2; exit 1; }
 patchset_definition="$(cd "$repo_root" && cd "$patchset_definition" && pwd)"
 patch_manifest="$patchset_definition/manifest.json"
 series_file="$patchset_definition/series"
@@ -85,7 +87,8 @@ apply_series_to() {
   local root="$1" relative_patch expected
 
   while IFS= read -r relative_patch; do
-    expected="$(jq -er --arg path "$relative_patch" '.patches[] | select(.path == $path) | .sha256' "$patch_manifest")"
+    expected="$(jq -er --arg path "$relative_patch" '.patches[] | select(.path == $path) | .sha256' "$patch_manifest")" \
+      || die "patch not in manifest: $relative_patch"
     [[ "$(sha256_file "$repo_root/$relative_patch")" == "$expected" ]] \
       || die "patch SHA-256 mismatch: $relative_patch"
     git -C "$root" am --quiet --committer-date-is-author-date "$repo_root/$relative_patch" \
@@ -109,12 +112,18 @@ create_reproducible_tar_gz() {
   parent="$(cd "$(dirname "$bundle_root")" && pwd)"
   name="$(basename "$bundle_root")"
   list="$parent/.runeon-archive-files"
+  # Normalise modes and times so the digest does not depend on umask or clock.
+  find "$bundle_root" -type d -exec chmod 755 {} +
+  find "$bundle_root" -type f -perm -u+x -exec chmod 755 {} +
+  find "$bundle_root" -type f ! -perm -u+x -exec chmod 644 {} +
   TZ=UTC find "$bundle_root" -exec touch -h -t "$bundle_timestamp" {} +
   (cd "$parent" && LC_ALL=C find "$name" -print | LC_ALL=C sort >"$list")
   if tar --version 2>/dev/null | grep -qi bsdtar; then
-    tar --no-recursion --uid 0 --gid 0 --uname root --gname root -cf - -C "$parent" -T "$list" | gzip -n >"$archive"
+    COPYFILE_DISABLE=1 tar --format ustar --no-recursion --uid 0 --gid 0 --uname root --gname root \
+      -cf - -C "$parent" -T "$list" | gzip -n >"$archive"
   else
-    tar --no-recursion --owner=0 --group=0 --numeric-owner -cf - -C "$parent" -T "$list" | gzip -n >"$archive"
+    tar --format=ustar --no-recursion --owner=0 --group=0 --numeric-owner \
+      -cf - -C "$parent" -T "$list" | gzip -n >"$archive"
   fi
   rm -f "$list"
 }

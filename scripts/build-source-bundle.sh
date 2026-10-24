@@ -9,7 +9,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=common.sh
 source "$script_dir/common.sh"
 
-[[ $# -eq 2 ]] || die "usage: $0 PATCHED_DXMT_SOURCE_ROOT OUTPUT_DIR"
+[[ $# -eq 2 && -n "$1" ]] || die "usage: $0 PATCHED_DXMT_SOURCE_ROOT OUTPUT_DIR"
 source_root="$(cd "$1" && pwd)"
 mkdir -p "$2"
 out_dir="$(cd "$2" && pwd)"

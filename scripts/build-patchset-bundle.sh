@@ -14,6 +14,8 @@ out_dir="$(cd "$1" && pwd)"
 
 load_manifests
 require_release_tag_checkout_if_published
+[[ -z "$(git -C "$repo_root" status --porcelain -- base patchsets patches LICENSE README.md BUILDING.md)" ]] \
+  || die "bundle inputs have uncommitted changes"
 
 name="runeon-dxmt-$patch_set_id-patchset"
 staging="$(mktemp -d "${TMPDIR:-/tmp}/runeon-dxmt-patchset.XXXXXX")"

@@ -27,6 +27,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Fetch the pinned DXMT tag
         id: source
-        run: echo "root=$(scripts/fetch-source.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          root="$(scripts/fetch-source.sh)"
+          echo "root=$root" >> "$GITHUB_OUTPUT"
       - name: Apply the newest patch set and check its tree
         run: scripts/integration-check.sh "${{ steps.source.outputs.root }}"

@@ -8,7 +8,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=common.sh
 source "$script_dir/common.sh"
 
-[[ $# -eq 1 ]] || die "usage: $0 DXMT_SOURCE_ROOT"
+[[ $# -eq 1 && -n "$1" ]] || die "usage: $0 DXMT_SOURCE_ROOT"
 source_root="$(cd "$1" && pwd)"
 
 load_manifests

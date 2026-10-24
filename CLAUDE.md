@@ -95,7 +95,7 @@ These checks prove that the series applies and produces the recorded tree, nothi
 
 ## 10. Documentation
 
-- The root holds only `README.md`, `BUILDING.md`, `MAINTENANCE.md`, `SECURITY.md` and this file. Do not add another document, at the root or under `docs/`; `static-check.sh` rejects it.
+- The root holds only `README.md` and its two translations, `BUILDING.md`, `MAINTENANCE.md`, `SECURITY.md`, this file and its `AGENTS.md` symlink. Do not add another document, at the root or under `docs/`; `static-check.sh` rejects it.
 - Only the README is translated. `README.md` is authoritative; `README.zh-CN.md` and `README.ja.md` are complete translations, updated in the same commit. Everything else is English only.
 - A new upstream review is a new section at the end of `docs/upstream-reviews.md`, with an `<a id>` anchor, and one row of the "Review records" table in `MAINTENANCE.md`. A downstream patch's rationale goes into its commit message, not into a new document.
 - Keep lines readable: one fact per bullet or table row. State validation limits plainly.
