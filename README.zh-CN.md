@@ -6,10 +6,10 @@
 
 Runeon DXMT 是 Runeon 所分发 DXMT 组件的公开源码维护仓库。它包含固定的 [DXMT](https://github.com/3Shain/dxmt) tag、回移到该 tag 上的上游修复、Runeon 自己的修改，以及重建每个已分发组件精确对应源码的脚本。本仓库不作任何广泛的兼容性承诺，也不包含 Runeon App、Steam、游戏或 Apple 私有图形组件。
 
-## 基线与当前补丁集
+## 基线与当前版本
 
 - 上游：DXMT `v0.80`（`589adb7`）及其固定的 submodule，见 [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
-- 最新补丁集：[`0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)：23 个上游修复与 3 个 Runeon 修改；尚未在本仓库发布 Release
+- 当前正式源码：[`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5)：23 个上游修复与 3 个 Runeon 修改。定义见 [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
 - 上游审查记录：[MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## 仓库结构
@@ -47,7 +47,7 @@ scripts/integration-check.sh "$source_root"
 
 | 补丁集 | 状态 | 说明 |
 |---|---|---|
-| `0.80-runeon.5` | 尚未在本仓库发布 | 在本仓库建立前已分发；其补丁系列随组件附带 |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版，最新 | 当前版本；在本仓库建立前已构建并分发 |
 
 ## 文档
 

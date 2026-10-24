@@ -6,10 +6,10 @@
 
 Runeon DXMT is the public source-maintenance repository for the DXMT component that Runeon ships. It holds a pinned [DXMT](https://github.com/3Shain/dxmt) tag, upstream fixes backported onto it, Runeon's own changes, and the scripts that rebuild the exact corresponding source of every shipped component. It makes no general compatibility promise, and it does not contain the Runeon App, Steam, games or Apple private graphics components.
 
-## Baseline and current patch set
+## Baseline and current release
 
 - Upstream: DXMT `v0.80` (`589adb7`), with its pinned submodules, in [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
-- Newest patch set: [`0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json): 23 upstream fixes and 3 Runeon changes; not yet published as a Release here
+- Current stable source: [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5): 23 upstream fixes and 3 Runeon changes. Definition in [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
 - Upstream review records: [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## Repository layout
@@ -47,7 +47,7 @@ Each Release carries the patch-set bundle, the complete corresponding source and
 
 | Patch set | State | Status |
 |---|---|---|
-| `0.80-runeon.5` | not published here yet | Shipped before this repository existed; its patch series ships inside the component |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | stable, latest | Current; built and shipped before this repository existed |
 
 ## Documentation
 

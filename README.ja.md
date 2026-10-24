@@ -6,10 +6,10 @@
 
 Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソース保守リポジトリです。固定された [DXMT](https://github.com/3Shain/dxmt) のタグ、そこへバックポートしたアップストリームの修正、Runeon 独自の変更、そして配布したすべてのコンポーネントに正確に対応するソースを再構築するスクリプトを収めています。広範な互換性を約束するものではなく、Runeon App、Steam、ゲーム、Apple の非公開グラフィックスコンポーネントは含みません。
 
-## ベースラインと現在のパッチセット
+## ベースラインと現在のリリース
 
 - アップストリーム：DXMT `v0.80`（`589adb7`）と固定された submodule。[`base/dxmt-0.80.json`](base/dxmt-0.80.json) を参照
-- 最新のパッチセット：[`0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)：アップストリームの修正 23 件と Runeon の変更 3 件。本リポジトリではまだ Release として公開していません
+- 現在の正式ソース：[`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5)：アップストリームの修正 23 件と Runeon の変更 3 件。定義は [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
 - アップストリームのレビュー記録：[MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## リポジトリ構成
@@ -47,7 +47,7 @@ scripts/integration-check.sh "$source_root"
 
 | パッチセット | 状態 | 説明 |
 |---|---|---|
-| `0.80-runeon.5` | 本リポジトリでは未公開 | 本リポジトリの作成前に配布済み。パッチシリーズはコンポーネントに同梱 |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版、最新 | 現行版。本リポジトリの作成前にビルド・配布済み |
 
 ## ドキュメント
 
