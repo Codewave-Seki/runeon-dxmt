@@ -1,0 +1,32 @@
+From 13667c783ad4b8fdb58e45ff31868ca1636f643e Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Fri, 17 Jul 2026 15:15:36 +0800
+Subject: [PATCH 11/26] fix(d3d10): correctly pass `StartInstanceLocation`
+ parameter in `DrawIndexedInstanced()`
+
+Fix #188
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 32c30a8848a9b9829aef40e2f7aa481ab4aa5d89)
+---
+ src/d3d10/d3d10_device.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/d3d10/d3d10_device.cpp b/src/d3d10/d3d10_device.cpp
+index 96da2c9..155e626 100644
+--- a/src/d3d10/d3d10_device.cpp
++++ b/src/d3d10/d3d10_device.cpp
+@@ -136,7 +136,7 @@ MTLD3D10Device::DrawIndexedInstanced(
+     UINT StartInstanceLocation
+ ) {
+   d3d11_context_->DrawIndexedInstanced(
+-      IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartIndexLocation
++      IndexCountPerInstance, InstanceCount, StartIndexLocation, BaseVertexLocation, StartInstanceLocation
+   );
+ }
+ 
+-- 
+2.54.0 (Apple Git-157)
+
+

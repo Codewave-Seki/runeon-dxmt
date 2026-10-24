@@ -1,0 +1,59 @@
+From e511813ef2bbe389b97f63e5b7f4721370199fec Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Fri, 2 Oct 2026 17:56:36 +0800
+Subject: [PATCH 19/26] fix(nvapi): copy build branch string with null
+ terminator
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 0fff7ffe5948eaa42321a63686eccc7b2cf9846a)
+---
+ src/nvapi/nvapi.cpp | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/src/nvapi/nvapi.cpp b/src/nvapi/nvapi.cpp
+index e9007bb..e20b7f6 100644
+--- a/src/nvapi/nvapi.cpp
++++ b/src/nvapi/nvapi.cpp
+@@ -43,7 +43,7 @@ NvAPI_SYS_GetDriverAndBranchVersion(NvU32 *pDriverVersion,
+   if (!pDriverVersion || !szBuildBranchString)
+     return NVAPI_INVALID_ARGUMENT;
+ 
+-  memcpy(szBuildBranchString, build_str.c_str(), build_str.size());
++  memcpy(szBuildBranchString, build_str.c_str(), build_str.size() + 1);
+   *pDriverVersion = 99999;
+ 
+   return NVAPI_OK;
+@@ -62,8 +62,8 @@ NvAPI_GetDisplayDriverVersion(NvDisplayHandle hNvDisplay, NV_DISPLAY_DRIVER_VERS
+ 
+   pVersion->drvVersion = 99999;
+   pVersion->bldChangeListNum = 0;
+-  memcpy(pVersion->szBuildBranchString, build_str.c_str(), build_str.size());
+-  memcpy(pVersion->szAdapterString, adapter_str.c_str(), adapter_str.size());
++  memcpy(pVersion->szBuildBranchString, build_str.c_str(), build_str.size() + 1);
++  memcpy(pVersion->szAdapterString, adapter_str.c_str(), adapter_str.size() + 1);
+ 
+   return NVAPI_OK;
+ }
+@@ -75,7 +75,7 @@ NvAPI_GetInterfaceVersionString(NvAPI_ShortString szDesc) {
+   if (!szDesc)
+     return NVAPI_INVALID_ARGUMENT;
+ 
+-  memcpy(szDesc, version_str.c_str(), version_str.size());
++  memcpy(szDesc, version_str.c_str(), version_str.size() + 1);
+ 
+   return NVAPI_OK;
+ }
+@@ -593,7 +593,7 @@ NvAPI_GPU_GetFullName(NvPhysicalGpuHandle hPhysicalGpu, NvAPI_ShortString szName
+   if (!szName)
+     return NVAPI_INVALID_ARGUMENT;
+ 
+-  memcpy(szName, adapter_str.c_str(), adapter_str.size());
++  memcpy(szName, adapter_str.c_str(), adapter_str.size() + 1);
+ 
+   return NVAPI_OK;
+ }
+-- 
+2.54.0 (Apple Git-157)
+
+

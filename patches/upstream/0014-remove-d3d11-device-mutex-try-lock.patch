@@ -1,0 +1,30 @@
+From e285d758c6c609be36aebc2e991bd9a1f8b19d1c Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Fri, 2 Oct 2026 17:32:32 +0800
+Subject: [PATCH 16/26] fix(d3d11): remove `d3d11_device_mutex::try_lock()`
+
+It is used nowhere.
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit acda4f9419ebf9f47da3c51341eee320aac14246)
+---
+ src/d3d11/d3d11_multithread.hpp | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/src/d3d11/d3d11_multithread.hpp b/src/d3d11/d3d11_multithread.hpp
+index 6c6d350..d863fa4 100644
+--- a/src/d3d11/d3d11_multithread.hpp
++++ b/src/d3d11/d3d11_multithread.hpp
+@@ -8,7 +8,6 @@ class d3d11_device_mutex {
+ public:
+   void lock();
+   void unlock() noexcept;
+-  bool try_lock() { return true; }
+ 
+   bool set_protected(bool Protected);
+   bool get_protected();
+-- 
+2.54.0 (Apple Git-157)
+
+

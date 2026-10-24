@@ -1,0 +1,70 @@
+From d447102988c6473ab49f91b62b42911b952454ec Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Sat, 25 Apr 2026 18:57:51 +0800
+Subject: [PATCH 03/26] fix(d3d11): correct reported `DestBlend` and
+ `SrcBlendAlpha` values in `ID3D11BlendState::GetDesc()`
+
+Fix wrong blend states in Nino2.
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 05e4a9fcff6a79e6ec60e488b78653b677f33173)
+---
+ src/d3d11/d3d11_state_object.cpp | 36 +++++++++++++++++++++++---------
+ 1 file changed, 26 insertions(+), 10 deletions(-)
+
+diff --git a/src/d3d11/d3d11_state_object.cpp b/src/d3d11/d3d11_state_object.cpp
+index 6a1ad50..5cdd91e 100644
+--- a/src/d3d11/d3d11_state_object.cpp
++++ b/src/d3d11/d3d11_state_object.cpp
+@@ -1,3 +1,21 @@
++/*
++ * Copyright 2026 Feifan He for CodeWeavers
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
+ 
+ #include "Metal.hpp"
+ #include "d3d11_device.hpp"
+@@ -279,16 +297,14 @@ public:
+     pDesc->IndependentBlendEnable = desc_.IndependentBlendEnable;
+     pDesc->AlphaToCoverageEnable = desc_.AlphaToCoverageEnable;
+     for (size_t i = 0; i < 8; i++) {
+-      auto &renderTarget = desc_.RenderTarget[i];
+-      pDesc->RenderTarget[i].RenderTargetWriteMask =
+-          renderTarget.RenderTargetWriteMask;
+-      pDesc->RenderTarget[i].BlendEnable = renderTarget.BlendEnable;
+-      pDesc->RenderTarget[i].BlendOp = renderTarget.BlendOp;
+-      pDesc->RenderTarget[i].BlendOpAlpha = renderTarget.BlendOpAlpha;
+-      pDesc->RenderTarget[i].SrcBlend = renderTarget.SrcBlend;
+-      pDesc->RenderTarget[i].DestBlend = renderTarget.SrcBlendAlpha;
+-      pDesc->RenderTarget[i].SrcBlendAlpha = renderTarget.DestBlend;
+-      pDesc->RenderTarget[i].DestBlendAlpha = renderTarget.DestBlendAlpha;
++      pDesc->RenderTarget[i].BlendEnable = desc_.RenderTarget[i].BlendEnable;
++      pDesc->RenderTarget[i].SrcBlend = desc_.RenderTarget[i].SrcBlend;
++      pDesc->RenderTarget[i].DestBlend = desc_.RenderTarget[i].DestBlend;
++      pDesc->RenderTarget[i].BlendOp = desc_.RenderTarget[i].BlendOp;
++      pDesc->RenderTarget[i].SrcBlendAlpha = desc_.RenderTarget[i].SrcBlendAlpha;
++      pDesc->RenderTarget[i].DestBlendAlpha = desc_.RenderTarget[i].DestBlendAlpha;
++      pDesc->RenderTarget[i].BlendOpAlpha = desc_.RenderTarget[i].BlendOpAlpha;
++      pDesc->RenderTarget[i].RenderTargetWriteMask = desc_.RenderTarget[i].RenderTargetWriteMask;
+     }
+   }
+ 
+-- 
+2.54.0 (Apple Git-157)
+
+

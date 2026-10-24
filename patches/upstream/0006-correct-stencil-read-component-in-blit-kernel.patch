@@ -1,0 +1,39 @@
+From 5261605646343096be3f6aa43f713010ddfd0d74 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 27 Apr 2026 21:05:42 +0800
+Subject: [PATCH 08/26] fix(dxmt): correct stencil read component in blit
+ kernel
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit cde48cb8910c34619b10dc87e39f67cc3cffece5)
+---
+ src/dxmt/dxmt_command.metal | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/dxmt/dxmt_command.metal b/src/dxmt/dxmt_command.metal
+index 1f4aec9..f20df4d 100644
+--- a/src/dxmt/dxmt_command.metal
++++ b/src/dxmt/dxmt_command.metal
+@@ -515,7 +515,7 @@ struct linear_texture_desc {
+   if (width > pos.x && height > pos.y) {
+     auto dst = reinterpret_cast<device packed_d32s8x24 *>(buffer + buffer_offset);
+     dst->depth = tex_depth.read(pos).x;
+-    dst->stencil = tex_stencil.read(pos).y;
++    dst->stencil = tex_stencil.read(pos).x;
+   }
+ }
+ 
+@@ -533,7 +533,7 @@ struct linear_texture_desc {
+   if (width > pos.x && height > pos.y) {
+     auto dst = reinterpret_cast<device uint *>(buffer + buffer_offset);
+     float depth = tex_depth.read(pos).x;
+-    uint stencil = tex_stencil.read(pos).y;
++    uint stencil = tex_stencil.read(pos).x;
+     *dst = (uint(0xffffff * clamp(depth, 0.0, 1.0)) & 0xffffff) | (stencil << 24);
+   }
+ }
+-- 
+2.54.0 (Apple Git-157)
+
+

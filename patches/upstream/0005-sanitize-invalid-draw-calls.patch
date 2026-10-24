@@ -1,0 +1,140 @@
+From 2fa940feeaf2f0a66f074caef4ffd9a88fd0e7c9 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 27 Apr 2026 19:02:44 +0800
+Subject: [PATCH 07/26] fix(d3d11, dxmt): sanitize invalid draw calls
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 46911d734538d26cdd036a71fd80a9a01fd7c126)
+---
+ src/d3d11/d3d11_context_impl.cpp | 40 +++++++++++++++++++++++---------
+ src/dxmt/dxmt_command.metal      | 10 ++++----
+ 2 files changed, 35 insertions(+), 15 deletions(-)
+
+diff --git a/src/d3d11/d3d11_context_impl.cpp b/src/d3d11/d3d11_context_impl.cpp
+index e1e683d..0c52708 100644
+--- a/src/d3d11/d3d11_context_impl.cpp
++++ b/src/d3d11/d3d11_context_impl.cpp
+@@ -1,11 +1,25 @@
++/*
++ * This file is included by d3d11_context_{imm|def}.cpp
++ * and should be not used as a compilation unit
++ * since it is for internal use only (and I don't want to deal with several thousands line of code)
++ *
++ * Copyright 2026 Feifan He for CodeWeavers
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
+ 
+-/**
+-This file is included by d3d11_context_{imm|def}.cpp
+-and should be not used as a compilation unit
+-
+-since it is for internal use only
+-(and I don't want to deal with several thousands line of code)
+-*/
+ #include "Metal.hpp"
+ #include "d3d11_annotation.hpp"
+ #include "d3d11_context.hpp"
+@@ -1238,6 +1252,8 @@ public:
+   void
+   STDMETHODCALLTYPE
+   Draw(UINT VertexCount, UINT StartVertexLocation) override {
++    if (unlikely(!VertexCount))
++      return;
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+     WMTPrimitiveType Primitive;
+@@ -1269,10 +1285,10 @@ public:
+   void
+   STDMETHODCALLTYPE
+   DrawIndexed(UINT IndexCount, UINT StartIndexLocation, INT BaseVertexLocation) override {
++    if (unlikely(!IndexCount))
++      return;
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+-    if (!IndexCount)
+-      return;
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+     if(!to_metal_primitive_type(state_.InputAssembler.Topology, Primitive, ControlPointCount))
+@@ -1312,6 +1328,8 @@ public:
+   STDMETHODCALLTYPE
+   DrawInstanced(UINT VertexCountPerInstance, UINT InstanceCount, UINT StartVertexLocation, UINT StartInstanceLocation)
+       override {
++    if (unlikely(!VertexCountPerInstance || !InstanceCount))
++      return;
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+     WMTPrimitiveType Primitive;
+@@ -1349,10 +1367,10 @@ public:
+       UINT IndexCountPerInstance, UINT InstanceCount, UINT StartIndexLocation, INT BaseVertexLocation,
+       UINT StartInstanceLocation
+   ) override {
++    if (unlikely(!IndexCountPerInstance || !InstanceCount))
++      return;
+     std::lock_guard<mutex_t> lock(mutex);
+ 
+-    if (!IndexCountPerInstance)
+-      return;
+     WMTPrimitiveType Primitive;
+     uint32_t ControlPointCount;
+     if(!to_metal_primitive_type(state_.InputAssembler.Topology, Primitive, ControlPointCount))
+diff --git a/src/dxmt/dxmt_command.metal b/src/dxmt/dxmt_command.metal
+index 3bf4796..1f4aec9 100644
+--- a/src/dxmt/dxmt_command.metal
++++ b/src/dxmt/dxmt_command.metal
+@@ -384,7 +384,7 @@ struct DXMTDispatchArguments {
+ };
+ 
+ struct DXMTTSDispatchMarshal {
+-  constant uint2& draw_arguments; // (vertex|index_count, index_count)
++  constant uint2& draw_arguments; // (vertex|index_count, instance_count)
+   device DXMTDispatchArguments& dispatch_arguments_out;
+   ulong max_object_threadgroups;
+   ushort control_point_count;
+@@ -403,7 +403,8 @@ struct DXMTTSDispatchMarshal {
+ 
+     uint patch_count_per_instance = task.draw_arguments.x / (uint)task.control_point_count;
+     uint x = (patch_count_per_instance - 1) / task.patch_per_group + 1;
+-    if (x * task.draw_arguments.y > task.max_object_threadgroups) {
++    if ((task.draw_arguments.x * task.draw_arguments.y) == 0 ||
++        x * task.draw_arguments.y > task.max_object_threadgroups) {
+       output.x = 0;
+       output.y = 0;
+       output.z = 0;
+@@ -420,7 +421,7 @@ struct DXMTTSDispatchMarshal {
+ }
+ 
+ struct DXMTGSDispatchMarshal {
+-  constant uint2& draw_arguments; // (vertex|index_count, index_count)
++  constant uint2& draw_arguments; // (vertex|index_count, instance_count)
+   device DXMTDispatchArguments& dispatch_arguments_out;
+   ulong max_object_threadgroups;
+   uint vertex_count_per_warp;
+@@ -437,7 +438,8 @@ struct DXMTGSDispatchMarshal {
+     device DXMTDispatchArguments& output = task.dispatch_arguments_out;
+ 
+     uint x = (task.draw_arguments.x - 1) / task.vertex_count_per_warp + 1;
+-    if (x * task.draw_arguments.y > task.max_object_threadgroups) {
++    if ((task.draw_arguments.x * task.draw_arguments.y) == 0 ||
++        x * task.draw_arguments.y > task.max_object_threadgroups) {
+       output.x = 0;
+       output.y = 0;
+       output.z = 0;
+-- 
+2.54.0 (Apple Git-157)
+
+

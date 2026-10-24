@@ -1,0 +1,36 @@
+From d4a19cd7119f700edfb0410eaa5c2e7bd279369b Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 24 Aug 2026 17:40:18 +0800
+Subject: [PATCH 25/26] fix(d3d12, dxgi): make some stubs non-fatal
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit e55ad281c60be97f8815b5848e57cfd9f967d759; dxgi hunk only)
+---
+ src/dxgi/dxgi_adapter.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/dxgi/dxgi_adapter.cpp b/src/dxgi/dxgi_adapter.cpp
+index ea96fe4..abccc65 100644
+--- a/src/dxgi/dxgi_adapter.cpp
++++ b/src/dxgi/dxgi_adapter.cpp
+@@ -268,12 +268,13 @@ public:
+ 
+   HRESULT STDMETHODCALLTYPE RegisterVideoMemoryBudgetChangeNotificationEvent(
+       HANDLE event, DWORD *cookie) override {
+-    assert(0 && "TODO");
++    *cookie = 0;
++    return S_OK;
+   }
+ 
+   void STDMETHODCALLTYPE
+   UnregisterVideoMemoryBudgetChangeNotification(DWORD cookie) override {
+-    assert(0 && "TODO");
++    // no op
+   }
+ 
+   WMT::Device STDMETHODCALLTYPE GetMTLDevice() final { return device_; }
+-- 
+2.54.0 (Apple Git-157)
+
+

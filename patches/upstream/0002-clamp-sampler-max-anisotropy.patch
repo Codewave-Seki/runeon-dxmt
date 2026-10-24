@@ -1,0 +1,29 @@
+From 29b2a2e9f9f26d8aca073db1223659aff8a96364 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 27 Apr 2026 12:57:30 +0800
+Subject: [PATCH 04/26] fix(d3d11): clamp sampler max anisotropy
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 6251cffd33ad0291e8d70968b7c81732d344508b)
+---
+ src/d3d11/d3d11_state_object.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/d3d11/d3d11_state_object.cpp b/src/d3d11/d3d11_state_object.cpp
+index 5cdd91e..403e42b 100644
+--- a/src/d3d11/d3d11_state_object.cpp
++++ b/src/d3d11/d3d11_state_object.cpp
+@@ -729,7 +729,7 @@ StateObjectCache<D3D11_SAMPLER_DESC, D3D11SamplerState>::CreateStateObject(
+ 
+   // Anisotropy
+   if (D3D11_DECODE_IS_ANISOTROPIC_FILTER(desc.Filter)) {
+-    info.max_anisotroy = desc.MaxAnisotropy;
++    info.max_anisotroy = std::clamp(desc.MaxAnisotropy, 1u, 16u);
+   } else {
+     info.max_anisotroy = 1;
+   }
+-- 
+2.54.0 (Apple Git-157)
+
+

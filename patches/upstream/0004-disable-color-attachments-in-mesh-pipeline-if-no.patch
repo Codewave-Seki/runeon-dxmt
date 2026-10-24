@@ -1,0 +1,90 @@
+From 188aac2a981267d5fc5e2024f903cca8f608759a Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 27 Apr 2026 13:50:45 +0800
+Subject: [PATCH 06/26] fix(d3d11): disable color attachments in mesh pipeline
+ if no pixel shader is bound and rasterization is enabled
+
+Metal has been inconsistent here because the same setup is fine on ordinary render pipeline but triggers assertion for mesh render pipeline. FB22625154.
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit ab984cfd0083651ba0f8b1e66e348c4be99a02d6)
+---
+ src/d3d11/d3d11_pipeline_gs.cpp | 20 ++++++++++++++++++++
+ src/d3d11/d3d11_pipeline_ts.cpp | 20 ++++++++++++++++++++
+ 2 files changed, 40 insertions(+)
+
+diff --git a/src/d3d11/d3d11_pipeline_gs.cpp b/src/d3d11/d3d11_pipeline_gs.cpp
+index a81dc9f..efa605e 100644
+--- a/src/d3d11/d3d11_pipeline_gs.cpp
++++ b/src/d3d11/d3d11_pipeline_gs.cpp
+@@ -1,3 +1,21 @@
++/*
++ * Copyright 2026 Feifan He for CodeWeavers
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
+ #include "Metal.hpp"
+ #include "airconv_public.h"
+ #include "d3d11_device.hpp"
+@@ -16,6 +34,8 @@ public:
+         pBlendState(pDesc->BlendState),
+         RasterizationEnabled(pDesc->RasterizationEnabled),
+         SampleCount(pDesc->SampleCount) {
++    if (pDesc->RasterizationEnabled && !pDesc->PixelShader)
++      num_rtvs = 0;
+     uint32_t unorm_output_reg_mask = 0;
+     for (unsigned i = 0; i < num_rtvs; i++) {
+       rtv_formats[i] = pDesc->ColorAttachmentFormats[i];
+diff --git a/src/d3d11/d3d11_pipeline_ts.cpp b/src/d3d11/d3d11_pipeline_ts.cpp
+index cd087fb..23d1f00 100644
+--- a/src/d3d11/d3d11_pipeline_ts.cpp
++++ b/src/d3d11/d3d11_pipeline_ts.cpp
+@@ -1,3 +1,21 @@
++/*
++ * Copyright 2026 Feifan He for CodeWeavers
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
+ #include "Metal.hpp"
+ #include "airconv_public.h"
+ #include "d3d11_device.hpp"
+@@ -19,6 +37,8 @@ public:
+         pBlendState(pDesc->BlendState),
+         RasterizationEnabled(pDesc->RasterizationEnabled),
+         SampleCount(pDesc->SampleCount) {
++    if (pDesc->RasterizationEnabled && !pDesc->PixelShader)
++      num_rtvs = 0;
+     uint32_t unorm_output_reg_mask = 0;
+     for (unsigned i = 0; i < num_rtvs; i++) {
+       rtv_formats[i] = pDesc->ColorAttachmentFormats[i];
+-- 
+2.54.0 (Apple Git-157)
+
+

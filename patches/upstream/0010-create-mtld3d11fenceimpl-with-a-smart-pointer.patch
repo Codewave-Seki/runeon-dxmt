@@ -1,0 +1,45 @@
+From 2b18fea83f44e4de8561f04663ae03c70bd1b9b6 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 14 Sep 2026 14:48:16 +0800
+Subject: [PATCH 12/26] fix(d3d11): create `MTLD3D11FenceImpl` with a smart
+ pointer container
+
+Fix a potential memory leak when the following `QueryInterface()` fails.
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 1df5dd9e1fd021ade74c7b9f4dbd608bdd72a67c)
+---
+ src/d3d11/d3d11_fence.cpp | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/src/d3d11/d3d11_fence.cpp b/src/d3d11/d3d11_fence.cpp
+index 5a88050..0bdce7b 100644
+--- a/src/d3d11/d3d11_fence.cpp
++++ b/src/d3d11/d3d11_fence.cpp
+@@ -131,7 +131,7 @@ CreateFence(MTLD3D11Device *pDevice, UINT64 InitialValue, D3D11_FENCE_FLAG Flags
+     }
+   }
+   event.signalValue(InitialValue);
+-  auto fence = new MTLD3D11FenceImpl(pDevice, std::move(event), local_kmt);
++  auto fence = Com(new MTLD3D11FenceImpl(pDevice, std::move(event), local_kmt));
+   return fence->QueryInterface(riid, ppFence);
+ }
+ 
+@@ -181,10 +181,10 @@ OpenSharedFence(MTLD3D11Device *pDevice, HANDLE hResource,
+     return E_INVALIDARG;
+   }
+ 
+-  auto fence = new MTLD3D11FenceImpl(
++  auto fence = Com(new MTLD3D11FenceImpl(
+       pDevice,
+       pDevice->GetMTLDevice().newSharedEventWithMachPort(mach_port),
+-      open.hSyncObject);
++      open.hSyncObject));
+   return fence->QueryInterface(riid, ppFence);
+ }
+ 
+-- 
+2.54.0 (Apple Git-157)
+
+

@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "patchSetId": "0.80-runeon.5",
+  "baseId": "dxmt-0.80",
+  "resultTree": "3e8f84689a41098cb73f8e6361b39e50e38824cf",
+  "patches": [
+    {
+      "order": 1,
+      "path": "patches/runeon/0100-answer-idxgisurface-for-2d-textures.patch",
+      "sha256": "42ba3b5cf9237e46ddcd269bc72cb8f8250f9ceb06dfa3c6678136bc328b5aef",
+      "kind": "runeon",
+      "author": "Runeon Contributors <support@runeon.app>",
+      "summary": "d3d11: answer IDXGISurface for 2D textures (Runeon, Direct2D on DXMT)"
+    },
+    {
+      "order": 2,
+      "path": "patches/runeon/0101-implement-swapdevicecontextstate.patch",
+      "sha256": "6a0133f145bcaeaf64c1f0970b20447bceeedc51b0211530230fe70ba329fd99",
+      "kind": "runeon",
+      "author": "Runeon Contributors <support@runeon.app>",
+      "summary": "d3d11: implement SwapDeviceContextState (Runeon, Direct2D on DXMT)"
+    },
+    {
+      "order": 3,
+      "path": "patches/upstream/0001-correct-reported-destblend-and-srcblendalpha.patch",
+      "sha256": "1b589a7dac679a43fc286cd5eb546e93018b8b3dbfc2027442feb91485966dd7",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): correct reported `DestBlend` and `SrcBlendAlpha` values in `ID3D11BlendState::GetDesc()`",
+      "upstreamCommits": [
+        "05e4a9fcff6a79e6ec60e488b78653b677f33173"
+      ]
+    },
+    {
+      "order": 4,
+      "path": "patches/upstream/0002-clamp-sampler-max-anisotropy.patch",
+      "sha256": "fd4c83d252113329c0a561828d367ccb5f532296910b4ef6dc2149cad5c2a26b",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): clamp sampler max anisotropy",
+      "upstreamCommits": [
+        "6251cffd33ad0291e8d70968b7c81732d344508b"
+      ]
+    },
+    {
+      "order": 5,
+      "path": "patches/upstream/0003-add-missing-increment-in-loop.patch",
+      "sha256": "d62bf02df23d2826a1134c1912bdff8e592bb72accaeb9b7969242a2b948c67e",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(dxmt): add missing increment in loop",
+      "upstreamCommits": [
+        "aadf0fbbaa28c4260dcc14e69d8870c88fb05e97"
+      ]
+    },
+    {
+      "order": 6,
+      "path": "patches/upstream/0004-disable-color-attachments-in-mesh-pipeline-if-no.patch",
+      "sha256": "e44e431e726b301e1f8db1e8864a2a616980add9d3976e19775f279a800e9973",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): disable color attachments in mesh pipeline if no pixel shader is bound and rasterization is enabled",
+      "upstreamCommits": [
+        "ab984cfd0083651ba0f8b1e66e348c4be99a02d6"
+      ]
+    },
+    {
+      "order": 7,
+      "path": "patches/upstream/0005-sanitize-invalid-draw-calls.patch",
+      "sha256": "72469810b1f608c1109671f50c474c416ab4301adde65e1b483c11f68e874fe8",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11, dxmt): sanitize invalid draw calls",
+      "upstreamCommits": [
+        "46911d734538d26cdd036a71fd80a9a01fd7c126"
+      ]
+    },
+    {
+      "order": 8,
+      "path": "patches/upstream/0006-correct-stencil-read-component-in-blit-kernel.patch",
+      "sha256": "3cc675cd062c9b068f8fa94ba82111910587c4579d43dcff3dfa2bada1dec536",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(dxmt): correct stencil read component in blit kernel",
+      "upstreamCommits": [
+        "cde48cb8910c34619b10dc87e39f67cc3cffece5"
+      ]
+    },
+    {
+      "order": 9,
+      "path": "patches/upstream/0007-ensure-valid-bufferviewkey-is-not-a-null-value.patch",
+      "sha256": "b735f94c178436857dba0965e8c4a2a4a64d9915dcf5c4d372a6b2d99d3c22ec",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(dxmt): ensure valid `BufferViewKey` is not a null value",
+      "upstreamCommits": [
+        "b1f8bdf1b514735fa32875d3faa3decddcc458e8"
+      ]
+    },
+    {
+      "order": 10,
+      "path": "patches/upstream/0008-ignore-id3d11infoqueue-imtld3d11contextext.patch",
+      "sha256": "822815b2ab3ed5ef8e8dfef710ae8fca94e31cc4f81fab5f6f8857cb406c6d72",
+      "kind": "upstream-backport",
+      "author": "Paweł Kołodziejski <aquadran@gmail.com>",
+      "summary": "fix(d3d11,dxgi): ignore ID3D11InfoQueue, IMTLD3D11ContextExt, IWineDXGIAdapter, interface requests",
+      "upstreamCommits": [
+        "fd7763b9a5c19b4c225e35e248b4071c1de7b4bc"
+      ]
+    },
+    {
+      "order": 11,
+      "path": "patches/upstream/0009-correctly-pass-startinstancelocation-parameter.patch",
+      "sha256": "0f17af9e9655af3f60475f5cef486542724439b1c513850b005558239841e07d",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d10): correctly pass `StartInstanceLocation` parameter in `DrawIndexedInstanced()`",
+      "upstreamCommits": [
+        "32c30a8848a9b9829aef40e2f7aa481ab4aa5d89"
+      ]
+    },
+    {
+      "order": 12,
+      "path": "patches/upstream/0010-create-mtld3d11fenceimpl-with-a-smart-pointer.patch",
+      "sha256": "456f36411eb9824ced3e73f7d5ad252fa103e2241bd643f4d04305d323a1acb7",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): create `MTLD3D11FenceImpl` with a smart pointer container",
+      "upstreamCommits": [
+        "1df5dd9e1fd021ade74c7b9f4dbd608bdd72a67c"
+      ]
+    },
+    {
+      "order": 13,
+      "path": "patches/upstream/0011-make-pure-virtual-call-non-fatal.patch",
+      "sha256": "646891a6c51e9554cdddb44a746d6d894e62233df67328e2f8f9af01b93807e1",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): make pure virtual call non-fatal",
+      "upstreamCommits": [
+        "66277b82e3595361faaf9246048e8f376e704430"
+      ]
+    },
+    {
+      "order": 14,
+      "path": "patches/upstream/0012-raise-vertex-buffer-binding-count-to-d3d11-ia.patch",
+      "sha256": "82d11fc70c4a9183caa9e30f6a22d464c2d3a0b3df6d0c195a9967dcfb7d5a8a",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): raise vertex buffer binding count to `D3D11_IA_VERTEX_INPUT_RESOURCE_SLOT_COUNT`",
+      "upstreamCommits": [
+        "830eb41996bce66a9671ba069349f0055c5d8789"
+      ]
+    },
+    {
+      "order": 15,
+      "path": "patches/upstream/0013-pass-mipped-width-height-to-clear-encoder.patch",
+      "sha256": "240eaaf7031eb93a56f1d78a9c130ff430d4246d3ff39a52dff33913ff19c677",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(dxmt): pass mipped width & height to clear encoder",
+      "upstreamCommits": [
+        "f9beaea30b95c14e9ad76546e4a9bd9b726205c3"
+      ]
+    },
+    {
+      "order": 16,
+      "path": "patches/upstream/0014-remove-d3d11-device-mutex-try-lock.patch",
+      "sha256": "60f2ed248e7e4a5f51bca84a3da220d1c082a5d1d6c9a56e21749eef27d78ce2",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): remove `d3d11_device_mutex::try_lock()`",
+      "upstreamCommits": [
+        "acda4f9419ebf9f47da3c51341eee320aac14246"
+      ]
+    },
+    {
+      "order": 17,
+      "path": "patches/upstream/0015-fix-a-couple-of-copy-paste-bugs.patch",
+      "sha256": "211fe00df2ff297119cc3184ed989adb2358d08b117e2c55651874117507d46a",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix: fix a couple of copy-paste bugs",
+      "upstreamCommits": [
+        "a22700c7391eaee4d259ea9540e878f88c37256a"
+      ]
+    },
+    {
+      "order": 18,
+      "path": "patches/upstream/0016-fix-a-wrong-pointer-assignment.patch",
+      "sha256": "75f8ad5111eb23215b3e32cb50b0eeb5e67e428fa133b297e659e253dd2afc6e",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d10): fix a wrong pointer assignment",
+      "upstreamCommits": [
+        "e4f868dc3e53cafb14d5e72667ab9ac0f73d7a9d"
+      ]
+    },
+    {
+      "order": 19,
+      "path": "patches/upstream/0017-copy-build-branch-string-with-null-terminator.patch",
+      "sha256": "dac613a207c249263311082e614ba27607f564ca79bd68f28bbc7e2b8096d448",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(nvapi): copy build branch string with null terminator",
+      "upstreamCommits": [
+        "0fff7ffe5948eaa42321a63686eccc7b2cf9846a"
+      ]
+    },
+    {
+      "order": 20,
+      "path": "patches/upstream/0018-fix-some-logic-flaws-in-dilated-motion-vector.patch",
+      "sha256": "312ae270c6dc56a45e07550bdd3f739a04572cc29e4a777d860aaa40f2104dfd",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): fix some logic flaws in dilated motion vector handling",
+      "upstreamCommits": [
+        "ce79ad0ad3829f26484ee18b0a072680abce4b04"
+      ]
+    },
+    {
+      "order": 21,
+      "path": "patches/upstream/0019-lock-device-in-signal-and-wait.patch",
+      "sha256": "e3a51bc88b1fc3a4fe759a3c8c192ed44282e92603497d06d15dc84eb308ca31",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): lock device in `Signal()` and `Wait()`",
+      "upstreamCommits": [
+        "0b6399085a2f9a1d2e3e5a8ccded0eab70f04ac4"
+      ]
+    },
+    {
+      "order": 22,
+      "path": "patches/upstream/0020-handle-legitimate-null-parameter-in-create-blend.patch",
+      "sha256": "912bab18553cf0d2e33831f9c539df3e2d3ad9e72441245928b6e5eb73e3b6c2",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d11): handle legitimate null parameter in `Create{Blend|Rasterizer}State()`",
+      "upstreamCommits": [
+        "68af85e96196e1cf9f50de9fe24c70f03a1db4a7"
+      ]
+    },
+    {
+      "order": 23,
+      "path": "patches/upstream/0021-avoid-deadlock-on-reentrant-resizetarget.patch",
+      "sha256": "f54e542d7a1f159634c071d6f6b42ec2bc9ca74a1fb95215ff328b84d3596409",
+      "kind": "upstream-backport",
+      "author": "Marc-Aurel Zent <mzent@codeweavers.com>",
+      "summary": "fix(d3d11): avoid deadlock on reentrant `ResizeTarget()`",
+      "upstreamCommits": [
+        "e94c312f5c054263acf261cfa109edf13e757587"
+      ]
+    },
+    {
+      "order": 24,
+      "path": "patches/upstream/0022-pmappedresource-argument-in-id3d11devicecontext.patch",
+      "sha256": "ee38d49d9d85450bfdef9077adfcf88f90c71bc9db1446ff2c0cd477cfc45181",
+      "kind": "upstream-backport",
+      "author": "Paweł Kołodziejski <aquadran@gmail.com>",
+      "summary": "fix(d3d11): `pMappedResource` argument in `ID3D11DeviceContext::Map` can be NULL",
+      "upstreamCommits": [
+        "186a2327f1ec76376f6bc1ef64636f08b0728567"
+      ]
+    },
+    {
+      "order": 25,
+      "path": "patches/upstream/0023-make-some-stubs-non-fatal.patch",
+      "sha256": "e8925ddaa8dd124a6283286ca980f2a6ac7e9c13b9bae87502309445b7e0ea2d",
+      "kind": "upstream-backport",
+      "author": "Feifan He <feifan@codeweavers.com>",
+      "summary": "fix(d3d12, dxgi): make some stubs non-fatal",
+      "upstreamCommits": [
+        "e55ad281c60be97f8815b5848e57cfd9f967d759"
+      ]
+    },
+    {
+      "order": 26,
+      "path": "patches/runeon/0102-fail-map-of-a-default-resource-with-a-null.patch",
+      "sha256": "c92bf73412f9494a61f8a0ded6bcbd89e5553b79cd46a380ddcb55e6884ce146",
+      "kind": "runeon",
+      "author": "Runeon Contributors <support@runeon.app>",
+      "summary": "d3d11: fail Map() of a default resource with a NULL pMappedResource (Runeon)"
+    }
+  ]
+}

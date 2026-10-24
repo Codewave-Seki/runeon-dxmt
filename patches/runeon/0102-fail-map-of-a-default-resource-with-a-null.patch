@@ -1,0 +1,51 @@
+From 4ca25f101d4891ec435b9a24b94cc0d2a73b7305 Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Tue, 20 Oct 2026 14:32:36 +0900
+Subject: [PATCH 26/26] d3d11: fail Map() of a default resource with a NULL
+ pMappedResource (Runeon)
+
+Since "pMappedResource argument in ID3D11DeviceContext::Map can be NULL"
+dropped the entry check, a NULL pMappedResource on a resource that is
+neither dynamic nor staging reaches UNIMPLEMENTED("map-on-default: map"),
+which aborts the process in release builds as well. Before that change
+the call failed and the caller could fall back.
+
+Remove the two UNIMPLEMENTED blocks so the call fails as it did in v0.80:
+E_INVALIDARG on the immediate context, E_FAIL on a deferred one. The
+per-branch NULL checks that change added are kept.
+---
+ src/d3d11/d3d11_context_def.cpp | 3 ---
+ src/d3d11/d3d11_context_imm.cpp | 3 ---
+ 2 files changed, 6 deletions(-)
+
+diff --git a/src/d3d11/d3d11_context_def.cpp b/src/d3d11/d3d11_context_def.cpp
+index 7e569f3..2b8d09d 100644
+--- a/src/d3d11/d3d11_context_def.cpp
++++ b/src/d3d11/d3d11_context_def.cpp
+@@ -264,9 +264,6 @@ public:
+       }
+       return S_OK;
+     }
+-    if (pMappedResource == nullptr) {
+-      UNIMPLEMENTED("map-on-default: map");
+-    }
+     return E_FAIL;
+   }
+ 
+diff --git a/src/d3d11/d3d11_context_imm.cpp b/src/d3d11/d3d11_context_imm.cpp
+index 5295f27..74b8870 100644
+--- a/src/d3d11/d3d11_context_imm.cpp
++++ b/src/d3d11/d3d11_context_imm.cpp
+@@ -287,9 +287,6 @@ public:
+         coherent_seq_id = cmd_queue.CoherentSeqId();
+       };
+     };
+-    if (pMappedResource == nullptr) {
+-      UNIMPLEMENTED("map-on-default: map");
+-    }
+     return E_INVALIDARG;
+   }
+ 
+-- 
+2.54.0 (Apple Git-157)
+

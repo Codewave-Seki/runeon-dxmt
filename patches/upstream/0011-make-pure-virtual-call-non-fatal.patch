@@ -1,0 +1,31 @@
+From 568287152453b72dfa0350e8407f0b8e54ad9d50 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Wed, 16 Sep 2026 15:58:25 +0800
+Subject: [PATCH 13/26] fix(d3d11): make pure virtual call non-fatal
+
+`Skyrim Anniversary Edition` tries to release a destroyed texture, triggering pure virtual function call. It appears to be a game bug as the same behavior can be observed from DXVK on Linux. This is not a proper fix, althoguh the game is happy with it anyway.
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit 66277b82e3595361faaf9246048e8f376e704430)
+---
+ src/d3d11/d3d11.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/d3d11/d3d11.cpp b/src/d3d11/d3d11.cpp
+index 0550862..790b2d1 100644
+--- a/src/d3d11/d3d11.cpp
++++ b/src/d3d11/d3d11.cpp
+@@ -212,5 +212,7 @@ extern "C" void _massert(const char *_Message, const char *_File,
+ 
+ extern "C" void __cxa_pure_virtual() {
+   dxmt::Logger::err(dxmt::str::format("Pure virtual function called"));
++#ifndef NDEBUG
+   __builtin_trap();
++#endif
+ }
+\ No newline at end of file
+-- 
+2.54.0 (Apple Git-157)
+
+

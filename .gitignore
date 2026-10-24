@@ -1,0 +1,5 @@
+.DS_Store
+.work/
+dist/
+*.tar.gz
+*.sha256

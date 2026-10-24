@@ -1,0 +1,63 @@
+From f6e203829c9dcec8cc5216d070c1b61636c1d847 Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Tue, 20 Oct 2026 04:49:25 +0900
+Subject: [PATCH 02/26] d3d11: implement SwapDeviceContextState (Runeon,
+ Direct2D on DXMT)
+
+---
+ src/d3d11/d3d11_context_impl.cpp  | 20 +++++++++++++++++++-
+ src/d3d11/d3d11_context_state.hpp |  5 +++++
+ 2 files changed, 24 insertions(+), 1 deletion(-)
+
+diff --git a/src/d3d11/d3d11_context_impl.cpp b/src/d3d11/d3d11_context_impl.cpp
+index d53be63..e1e683d 100644
+--- a/src/d3d11/d3d11_context_impl.cpp
++++ b/src/d3d11/d3d11_context_impl.cpp
+@@ -1848,7 +1848,25 @@ public:
+   void
+   STDMETHODCALLTYPE
+   SwapDeviceContextState(ID3DDeviceContextState *pState, ID3DDeviceContextState **ppPreviousState) override {
+-    UNIMPLEMENTED("SwapDeviceContextState");
++    // Wine's Direct2D swaps its own pipeline state in (and the app's state out)
++    // around each render pass. Save the current pipeline state into the returned
++    // previous-state token, then activate the incoming token's saved state.
++    if (!pState) {
++      if (ppPreviousState)
++        *ppPreviousState = nullptr;
++      return;
++    }
++    std::lock_guard<mutex_t> lock(mutex);
++    auto incoming = static_cast<MTLD3D11DeviceContextState *>(pState);
++    if (ppPreviousState) {
++      auto previous = new MTLD3D11DeviceContextState(device);
++      previous->saved_state = std::move(state_);
++      *ppPreviousState = ref(previous);
++    }
++    state_ = std::move(incoming->saved_state);
++    incoming->saved_state = {};
++    ResetEncodingContextState();
++    InvalidateRenderPipeline();
+   }
+ 
+   void
+diff --git a/src/d3d11/d3d11_context_state.hpp b/src/d3d11/d3d11_context_state.hpp
+index 3484bda..cbaa062 100644
+--- a/src/d3d11/d3d11_context_state.hpp
++++ b/src/d3d11/d3d11_context_state.hpp
+@@ -211,6 +211,11 @@ public:
+ 
+     return E_NOINTERFACE;
+   }
++
++  // Saved pipeline state for SwapDeviceContextState. A newly created token
++  // carries default (empty) state, giving Direct2D a clean context to render
++  // into; swapping back restores the application's previously saved state.
++  D3D11ContextState saved_state = {};
+ };
+ 
+ } // namespace dxmt
+\ No newline at end of file
+-- 
+2.54.0 (Apple Git-157)
+
+

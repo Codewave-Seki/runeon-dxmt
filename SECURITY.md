@@ -1,0 +1,7 @@
+# Security Policy
+
+Do not submit Runeon user logs, diagnostics packages, account information, Steam data, secrets, signing identities, or Apple private components to public Issues, Pull Requests, Discussions, or Actions artifacts.
+
+If you find a security issue in this repository's source supply chain, scripts, or Release assets, send reproduction steps, the affected tag or commit, and only the minimum necessary evidence to `support@runeon.app`. Do not disclose unpatched exploitation details publicly before a remediation and disclosure plan is agreed.
+
+This repository covers only the public DXMT lineage, Runeon DXMT patches, and corresponding-source build entry points. The Runeon App, backend, user diagnostics, D3DMetal/GPTK, and Apple private components are outside its scope. Security issues in upstream DXMT itself belong to <https://github.com/3Shain/dxmt>.

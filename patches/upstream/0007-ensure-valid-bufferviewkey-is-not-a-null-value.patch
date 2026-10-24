@@ -1,0 +1,122 @@
+From c485b3b51b62f995ba22213ff8b8c79808a388f3 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 1 Jun 2026 17:10:27 +0800
+Subject: [PATCH 09/26] fix(dxmt): ensure valid `BufferViewKey` is not a null
+ value
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit b1f8bdf1b514735fa32875d3faa3decddcc458e8)
+---
+ src/dxmt/dxmt_buffer.cpp  |  8 ++++----
+ src/dxmt/dxmt_buffer.hpp  | 28 +++++++++++++++++++++++++---
+ src/dxmt/dxmt_command.hpp |  2 +-
+ 3 files changed, 30 insertions(+), 8 deletions(-)
+
+diff --git a/src/dxmt/dxmt_buffer.cpp b/src/dxmt/dxmt_buffer.cpp
+index 2d9704c..cdf102d 100644
+--- a/src/dxmt/dxmt_buffer.cpp
++++ b/src/dxmt/dxmt_buffer.cpp
+@@ -59,7 +59,7 @@ Buffer::view_(BufferViewKey key, BufferAllocation *allocation) {
+   if (unlikely(allocation->version_ != version_)) {
+     prepareAllocationViews(allocation);
+   }
+-  return *allocation->cached_view_[key];
++  return *allocation->cached_view_[key.index];
+ };
+ 
+ DXMT_RESOURCE_RESIDENCY_STATE &
+@@ -72,7 +72,7 @@ Buffer::residency(BufferViewKey key, BufferAllocation *allocation) {
+   if (unlikely(allocation->version_ != version_)) {
+     prepareAllocationViews(allocation);
+   }
+-  return allocation->cached_view_[key]->residency;
++  return allocation->cached_view_[key.index]->residency;
+ }
+ 
+ void
+@@ -120,12 +120,12 @@ Buffer::createView(BufferViewDescriptor const &descriptor) {
+   unsigned i = 0;
+   for (; i < version_; i++) {
+     if (viewDescriptors_[i].format == descriptor.format) {
+-      return i;
++      return BufferViewKey(i, std::nullopt);
+     }
+   }
+   viewDescriptors_.push_back(descriptor);
+   version_ = version_ + 1;
+-  return i;
++  return BufferViewKey(i, std::nullopt);;
+ }
+ 
+ Rc<BufferAllocation>
+diff --git a/src/dxmt/dxmt_buffer.hpp b/src/dxmt/dxmt_buffer.hpp
+index 2ee36c0..b74ffcb 100644
+--- a/src/dxmt/dxmt_buffer.hpp
++++ b/src/dxmt/dxmt_buffer.hpp
+@@ -24,7 +24,29 @@ enum class BufferAllocationFlag : uint32_t {
+   CpuPlaced = 6,
+ };
+ 
+-typedef uint64_t BufferViewKey;
++struct BufferViewKey {
++  union {
++    struct {
++      uint32_t index;
++      uint32_t valid_bits;
++    };
++    uint64_t impl_;
++  };
++
++  BufferViewKey() {
++    impl_ = 0;
++  }
++  BufferViewKey(uint64_t impl) {
++    impl_ = impl;
++  }
++  BufferViewKey(uint32_t index, std::nullopt_t ensure_correct_constructor) {
++    this->index = index;
++    valid_bits = ~0u;
++  }
++  operator uint64_t() const {
++    return impl_;
++  }
++};
+ 
+ struct BufferViewDescriptor {
+   WMTPixelFormat format;
+@@ -159,7 +181,7 @@ public:
+   };
+ 
+   WMTPixelFormat pixelFormat(BufferViewKey view) const {
+-    return viewDescriptors_[view].format;
++    return viewDescriptors_[view.index].format;
+   }
+ 
+ private:
+@@ -171,7 +193,7 @@ private:
+   uint32_t version_ = 0;
+   std::atomic<uint32_t> refcount_ = {0u};
+ 
+-  std::vector<BufferViewDescriptor> viewDescriptors_;
++  small_vector<BufferViewDescriptor, 1> viewDescriptors_;
+   dxmt::mutex mutex_;
+   WMT::Device device_;
+ };
+diff --git a/src/dxmt/dxmt_command.hpp b/src/dxmt/dxmt_command.hpp
+index 8debc6d..400934c 100644
+--- a/src/dxmt/dxmt_command.hpp
++++ b/src/dxmt/dxmt_command.hpp
+@@ -278,7 +278,7 @@ private:
+   WMT::Reference<WMT::Function> cs_clear_texture2d_array_float_;
+   Rc<Texture> clearing_texture_;
+   Rc<Buffer> clearing_buffer_;
+-  TextureViewKey clearing_view_ = 0; // type compatible with BufferViewKey
++  uint64_t clearing_view_ = 0; // type compatible with BufferViewKey
+   uint32_t dispatch_depth_ = 1;
+ 
+   struct DXMTClearMetadata {
+-- 
+2.54.0 (Apple Git-157)
+
+

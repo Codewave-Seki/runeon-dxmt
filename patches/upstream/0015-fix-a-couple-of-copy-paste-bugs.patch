@@ -1,0 +1,57 @@
+From c35d95ffb5ae624b57999d13c532d9c7d4277c92 Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Fri, 2 Oct 2026 17:36:57 +0800
+Subject: [PATCH 17/26] fix: fix a couple of copy-paste bugs
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit a22700c7391eaee4d259ea9540e878f88c37256a)
+The d3d12 and winemetal hunks are not carried.
+---
+ src/d3d11/d3d11_context_impl.cpp | 2 +-
+ src/d3d11/d3d11_shader.cpp       | 1 +
+ src/dxmt/dxmt_format.cpp         | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/d3d11/d3d11_context_impl.cpp b/src/d3d11/d3d11_context_impl.cpp
+index 0c52708..c49622d 100644
+--- a/src/d3d11/d3d11_context_impl.cpp
++++ b/src/d3d11/d3d11_context_impl.cpp
+@@ -3740,7 +3740,7 @@ public:
+           entry.Offset = pOffsets[slot - StartSlot];
+         } else {
+           ERR("SetVertexBuffers: offset is null");
+-          entry.Stride = 0;
++          entry.Offset = 0;
+         }
+         entry.Buffer = pVertexBuffer;
+           EmitST([=, buffer = entry.Buffer->buffer(), offset = entry.Offset,
+diff --git a/src/d3d11/d3d11_shader.cpp b/src/d3d11/d3d11_shader.cpp
+index 687b94a..4ffecc0 100644
+--- a/src/d3d11/d3d11_shader.cpp
++++ b/src/d3d11/d3d11_shader.cpp
+@@ -285,6 +285,7 @@ CreateVariantShader(MTLD3D11Device *pDevice, ManagedShader shader,
+   auto proc = [=](const char *func_name, SM50_SHADER_COMMON_DATA *common) -> sm50_bitcode_t  {
+     SM50_SHADER_GS_PASS_THROUGH_DATA gs_passthrough;
+     SM50_SHADER_PSO_TESSELLATOR_DATA pso_tess;
++    gs_passthrough.type = SM50_SHADER_GS_PASS_THROUGH;
+     gs_passthrough.DataEncoded = variant.gs_passthrough;
+     gs_passthrough.RasterizationDisabled = variant.rasterization_disabled;
+     gs_passthrough.next = &pso_tess;
+diff --git a/src/dxmt/dxmt_format.cpp b/src/dxmt/dxmt_format.cpp
+index 002c355..983e17e 100644
+--- a/src/dxmt/dxmt_format.cpp
++++ b/src/dxmt/dxmt_format.cpp
+@@ -197,7 +197,7 @@ FormatCapabilityInspector::Inspect(WMT::Device device) {
+     APPEND_CAP(WMTPixelFormatRG8Sint, NONAPPLE_INT_FORMAT_CAP | TEXTURE_BUFFER_READ_OR_WRITE)
+ 
+     APPEND_CAP(WMTPixelFormatR32Uint, NONAPPLE_INT_FORMAT_CAP | TEXTURE_BUFFER_ALL_CAP | FormatCapability::Atomic)
+-    APPEND_CAP(WMTPixelFormatR32Uint, NONAPPLE_INT_FORMAT_CAP | TEXTURE_BUFFER_ALL_CAP | FormatCapability::Atomic)
++    APPEND_CAP(WMTPixelFormatR32Sint, NONAPPLE_INT_FORMAT_CAP | TEXTURE_BUFFER_ALL_CAP | FormatCapability::Atomic)
+     APPEND_CAP(WMTPixelFormatR32Float, ALL_CAP | TEXTURE_BUFFER_ALL_CAP)
+ 
+     APPEND_CAP(WMTPixelFormatRG16Unorm, ALL_CAP | TEXTURE_BUFFER_READ_OR_WRITE)
+-- 
+2.54.0 (Apple Git-157)
+
+

@@ -1,0 +1,60 @@
+From 317f783df046441a37a76d1d56ffc98c01cf8d44 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Pawe=C5=82=20Ko=C5=82odziejski?= <aquadran@gmail.com>
+Date: Thu, 25 Jun 2026 18:41:29 +0200
+Subject: [PATCH 10/26] fix(d3d11,dxgi): ignore ID3D11InfoQueue,
+ IMTLD3D11ContextExt, IWineDXGIAdapter, interface requests
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Signed-off-by: Paweł Kołodziejski <aquadran@gmail.com>
+
+(cherry picked from commit fd7763b9a5c19b4c225e35e248b4071c1de7b4bc)
+---
+ src/d3d11/d3d11_device.cpp | 2 +-
+ src/dxgi/dxgi_adapter.cpp  | 8 ++++++++
+ 2 files changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/d3d11/d3d11_device.cpp b/src/d3d11/d3d11_device.cpp
+index 6a8caca..13706b0 100644
+--- a/src/d3d11/d3d11_device.cpp
++++ b/src/d3d11/d3d11_device.cpp
+@@ -1185,7 +1185,7 @@ public:
+       return S_OK;
+     }
+ 
+-    if (riid == __uuidof(ID3D11Debug))
++    if (riid == __uuidof(ID3D11Debug) || riid == __uuidof(ID3D11InfoQueue) || riid == __uuidof(IMTLD3D11ContextExt))
+       return E_NOINTERFACE;
+ 
+     if (riid == kRenderdocUUID || riid == kPixUUID || riid == kGpaUUID)
+diff --git a/src/dxgi/dxgi_adapter.cpp b/src/dxgi/dxgi_adapter.cpp
+index 1b3d37c..ea96fe4 100644
+--- a/src/dxgi/dxgi_adapter.cpp
++++ b/src/dxgi/dxgi_adapter.cpp
+@@ -11,6 +11,11 @@
+ 
+ namespace dxmt {
+ 
++const GUID kWineDXGIAdapterUUID = {0x17399d75,
++                                   0x964e,
++                                   0x4c03,
++                                   {0x99, 0xf8, 0x9d, 0x4f, 0xd1, 0x96, 0xdd, 0x62}};
++
+ Com<IDXGIOutput> CreateOutput(IMTLDXGIAdapter *pAadapter, HMONITOR monitor, DxgiOptions &options);
+ 
+ LUID GetAdapterLuid(WMT::Device device) {
+@@ -54,6 +59,9 @@ public:
+       return S_OK;
+     }
+ 
++    if (riid == kWineDXGIAdapterUUID)
++      return E_NOINTERFACE;
++
+     if (logQueryInterfaceError(__uuidof(IDXGIAdapter), riid)) {
+       WARN("DXGIAdapter: Unknown interface query ", str::format(riid));
+     }
+-- 
+2.54.0 (Apple Git-157)
+
+

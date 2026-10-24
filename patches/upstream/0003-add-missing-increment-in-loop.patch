@@ -1,0 +1,61 @@
+From 7beb70706ef1d2d2b40b121534b8c68efb3c7cfc Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 27 Apr 2026 13:44:49 +0800
+Subject: [PATCH 05/26] fix(dxmt): add missing increment in loop
+
+How can I forget this?!!
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit aadf0fbbaa28c4260dcc14e69d8870c88fb05e97)
+---
+ src/dxmt/dxmt_command.metal | 21 +++++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/src/dxmt/dxmt_command.metal b/src/dxmt/dxmt_command.metal
+index 772ba7d..3bf4796 100644
+--- a/src/dxmt/dxmt_command.metal
++++ b/src/dxmt/dxmt_command.metal
+@@ -1,3 +1,22 @@
++/*
++ * Copyright 2026 Feifan He for CodeWeavers
++ * Copyright 2026 Paweł Kołodziejski
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with this library; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
++ */
++
+ #include <metal_common>
+ #include <metal_texture>
+ #include <metal_math>
+@@ -396,6 +415,7 @@ struct DXMTTSDispatchMarshal {
+ 
+     if (task.end_of_command)
+       break;
++    index++;
+   };
+ }
+ 
+@@ -429,6 +449,7 @@ struct DXMTGSDispatchMarshal {
+ 
+     if (task.end_of_command)
+       break;
++    index++;
+   };
+ }
+ 
+-- 
+2.54.0 (Apple Git-157)
+
+

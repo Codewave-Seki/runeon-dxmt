@@ -1,0 +1,47 @@
+From a6eb41439f28d0d790248ae7f6be267dbe75a30b Mon Sep 17 00:00:00 2001
+From: Feifan He <feifan@codeweavers.com>
+Date: Mon, 5 Oct 2026 15:58:36 +0800
+Subject: [PATCH 20/26] fix(d3d11): fix some logic flaws in dilated motion
+ vector handling
+
+Signed-off-by: Feifan He <feifan@codeweavers.com>
+
+(cherry picked from commit ce79ad0ad3829f26484ee18b0a072680abce4b04)
+---
+ src/d3d11/d3d11_context_impl.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/src/d3d11/d3d11_context_impl.cpp b/src/d3d11/d3d11_context_impl.cpp
+index c49622d..df3ed8f 100644
+--- a/src/d3d11/d3d11_context_impl.cpp
++++ b/src/d3d11/d3d11_context_impl.cpp
+@@ -5272,6 +5272,7 @@ public:
+       if(output->pixelFormat() != entry.output_pixel_format) continue;
+       if(depth->pixelFormat() != entry.depth_pixel_format) continue;
+       if(motion_vector_format != entry.motion_vector_pixel_format) continue;
++      if(pDesc->MotionVectorInDisplayRes != (entry.mv_downscaled != nullptr)) continue;
+ 
+       scaler = entry.scaler;
+       mv_downscaled = entry.mv_downscaled;
+@@ -5311,7 +5312,7 @@ public:
+         tex_info.depth = 1;
+         tex_info.array_length = 1;
+         tex_info.mipmap_level_count = 1;
+-        tex_info.pixel_format = WMTPixelFormatRG32Float;
++        tex_info.pixel_format = motion_vector_format;
+         tex_info.sample_count = 1;
+         tex_info.type = WMTTextureType2D;
+         tex_info.usage = WMTTextureUsageShaderRead | WMTTextureUsageShaderWrite;
+@@ -5371,7 +5372,7 @@ public:
+         WMTFXTemporalScalerProps new_props = props;
+         new_props.motion_vector_scale_x = 1.0;
+         new_props.motion_vector_scale_y = 1.0;
+-        enc.upscaleTemporal(input, output, depth, mv_downscaled, 0, exposure, scaler, new_props);
++        enc.upscaleTemporal(input, output, depth, mv_downscaled, mv_downscaled->fullView, exposure, scaler, new_props);
+       } else {
+         enc.upscaleTemporal(input, output, depth, motion_vector, mv_view, exposure, scaler, props);
+       }
+-- 
+2.54.0 (Apple Git-157)
+
+
