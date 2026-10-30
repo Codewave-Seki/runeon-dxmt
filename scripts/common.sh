@@ -5,7 +5,6 @@ umask 022
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "$script_dir/.." && pwd)"
-base_manifest="$repo_root/base/dxmt-0.80.json"
 work_root="${RUNEON_DXMT_WORK_ROOT:-$repo_root/.work}"
 # The newest patch set unless RUNEON_DXMT_PATCHSET_DEFINITION selects another.
 patchset_definition="${RUNEON_DXMT_PATCHSET_DEFINITION:-}"
@@ -17,6 +16,8 @@ fi
 patchset_definition="$(cd "$repo_root" && cd "$patchset_definition" && pwd)"
 patch_manifest="$patchset_definition/manifest.json"
 series_file="$patchset_definition/series"
+# Each patch set names its base; earlier patch sets keep theirs.
+base_manifest="$repo_root/base/$(jq -r '.baseId' "$patch_manifest" 2>/dev/null || true).json"
 
 # git am needs a committer; manifests record the resulting tree, not commit IDs.
 export GIT_COMMITTER_NAME="Runeon DXMT" GIT_COMMITTER_EMAIL="support@runeon.app"
@@ -58,8 +59,10 @@ load_manifests() {
 
   base_id="$(json_value "$base_manifest" '.baseId')"
   base_repository="$(json_value "$base_manifest" '.repository')"
-  base_tag="$(json_value "$base_manifest" '.tag')"
+  # A base is an upstream tag or, while upstream has no newer release, a commit.
+  base_tag="$(jq -r '.tag // empty' "$base_manifest")"
   base_commit="$(json_value "$base_manifest" '.commit')"
+  base_ref="${base_tag:-$base_commit}"
   bundle_timestamp="$(json_value "$base_manifest" '.bundleTimestamp')"
   patch_set_id="$(json_value "$patch_manifest" '.patchSetId')"
   result_tree="$(json_value "$patch_manifest" '.resultTree')"
@@ -71,7 +74,7 @@ assert_base_checkout() {
   local root="$1" path expected actual
 
   [[ "$(git -C "$root" rev-parse HEAD)" == "$base_commit" ]] \
-    || die "$root is not at $base_tag ($base_commit)"
+    || die "$root is not at $base_ref ($base_commit)"
   while IFS=$'\t' read -r path expected; do
     actual="$(git -C "$root/$path" rev-parse HEAD 2>/dev/null)" \
       || die "submodule not checked out: $path"

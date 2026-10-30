@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the patch-set bundle: base pin, series, manifest and patches, which
-# `git am` applies in series order on top of the pinned DXMT tag.
+# `git am` applies in series order on top of the pinned DXMT tag or commit.
 
 set -euo pipefail
 

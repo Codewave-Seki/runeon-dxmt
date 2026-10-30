@@ -36,7 +36,7 @@ done < <(jq -r '.submodules | keys[]' "$base_manifest")
 jq -n --arg patchSetId "$patch_set_id" --arg repository "$base_repository" \
   --arg tag "$base_tag" --arg commit "$base_commit" --arg tree "$result_tree" \
   --slurpfile base "$base_manifest" \
-  '{schemaVersion: 1, patchSetId: $patchSetId, base: {repository: $repository, tag: $tag, commit: $commit, submodules: $base[0].submodules}, resultTree: $tree}' \
+  '{schemaVersion: 1, patchSetId: $patchSetId, base: {repository: $repository, tag: (if $tag == "" then null else $tag end), commit: $commit, submodules: $base[0].submodules}, resultTree: $tree}' \
   >"$staging/$name/RUNEON-SOURCE.json"
 
 archive="$out_dir/$name.tar.gz"

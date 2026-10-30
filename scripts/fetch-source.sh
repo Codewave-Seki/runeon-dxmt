@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Clones the pinned DXMT tag with its submodules into the work root (once),
+# Clones the pinned DXMT tag or commit with its submodules into the work root (once),
 # verifies it, and prints its path.
 
 set -euo pipefail
@@ -15,9 +15,15 @@ source_root="$work_root/source/$base_id"
 if [[ ! -d "$source_root/.git" ]]; then
   mkdir -p "$(dirname "$source_root")"
   rm -rf "$source_root.partial"
-  printf 'cloning %s %s\n' "$base_repository" "$base_tag" >&2
-  git -c advice.detachedHead=false clone --quiet --recurse-submodules --branch "$base_tag" \
-    "$base_repository" "$source_root.partial"
+  printf 'cloning %s %s\n' "$base_repository" "$base_ref" >&2
+  if [[ -n "$base_tag" ]]; then
+    git -c advice.detachedHead=false clone --quiet --recurse-submodules --branch "$base_tag" \
+      "$base_repository" "$source_root.partial"
+  else
+    git clone --quiet --no-checkout "$base_repository" "$source_root.partial"
+    git -c advice.detachedHead=false -C "$source_root.partial" checkout --quiet --detach "$base_commit"
+    git -C "$source_root.partial" submodule --quiet update --init --recursive
+  fi
   mv "$source_root.partial" "$source_root"
 fi
 
