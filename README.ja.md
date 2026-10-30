@@ -8,10 +8,9 @@ Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソ�
 
 ## ベースラインと現在のリリース
 
-- アップストリーム：DXMT `v0.80`（`589adb7`）。[`base/dxmt-0.80.json`](base/dxmt-0.80.json) を参照。`0.80-runeon.6` 以降はアップストリーム `main` の `3b25259`。[`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json) を参照
-- 現在の正式ソース：[`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5)：アップストリームの修正 23 件と Runeon の変更 3 件。定義は [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
-- 現在の候補：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：アップストリーム `main` の `3b25259` と Runeon の変更 1 件。定義は [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
-- アップストリームのレビュー記録：[MAINTENANCE.md](MAINTENANCE.md#review-records)
+- アップストリームのベース：DXMT `main` の `3b25259`（`v0.80` 以降アップストリームのリリースなし）。[`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json) で固定。`0.80-runeon.5` は `v0.80`（`589adb7`）を使用し、[`base/dxmt-0.80.json`](base/dxmt-0.80.json) で固定
+- 現在の正式ソース：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：アップストリーム `main` の `3b25259` と Runeon の変更 1 件。App `>=1.13 (10)` に配布。定義は [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
+- アップストリームのレビュー範囲：`3b25259` まで。[MAINTENANCE.md](MAINTENANCE.md#review-records) を参照
 
 ## リポジトリ構成
 
@@ -40,24 +39,24 @@ source_root="$(scripts/fetch-source.sh)"
 scripts/integration-check.sh "$source_root"
 ```
 
-`integration-check.sh` は、固定ベースの一時 worktree に `git am` で各パッチを順に適用し、結果が manifest に記録された tree と一致することを確認します。DLL と Release バンドルのビルドは [BUILDING.md](BUILDING.md) を参照してください。
+`integration-check.sh` は、固定ベースの一時 worktree に `git am` で各パッチを順に適用し、結果が manifest に記録された tree と一致することを確認します。コンポーネントと Release バンドルのビルドは [BUILDING.md](BUILDING.md) を参照してください。
 
 ## リリース履歴
 
-各 Release には、パッチセットのバンドル、完全な対応ソース、2 つの SHA-256 ファイルが含まれます。
+各 Release には、パッチセットのバンドル、完全な対応ソース、2 つの SHA-256 ファイルが含まれ、そのパッチセットで追加された内容は Release ノートに記載しています。
 
 | パッチセット | 状態 | 説明 |
 |---|---|---|
-| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | Pre-release | 候補版 |
-| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版、最新 | 現行版。本リポジトリの作成前にビルド・配布済み |
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版、latest | 現行版。App `>=1.13 (10)` に配布 |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版 | 置き換え済み、保持。本リポジトリの作成前にビルド・配布済み |
 
 ## ドキュメント
 
-- [BUILDING.md](BUILDING.md)：DLL とソースバンドルのビルド
+- [BUILDING.md](BUILDING.md)：コンポーネントと Release バンドルのビルド
 - [MAINTENANCE.md](MAINTENANCE.md)：アップストリームのレビュー、パッチの受け入れ基準、リリース方針
 - [SECURITY.md](SECURITY.md)：セキュリティ問題の報告
 - [docs/upstream-reviews.md](docs/upstream-reviews.md)：レビュー記録
 
 ## ライセンス
 
-DXMT は `v0.80` の後、アップストリームのコミット `ec357fd` でライセンスを MIT から LGPL-2.1-or-later に変更しました。本リポジトリのバックポートした修正と Runeon の変更は LGPL-2.1-or-later でライセンスされます。[`LICENSE`](LICENSE) を参照してください。DXMT `v0.80` 時点のコードは引き続き MIT ライセンスで利用できます。アップストリームのコミットは元の作者を保持します。本リポジトリは Runeon App のライセンスを変更しません。
+DXMT は `v0.80` の後、アップストリームのコミット `ec357fd` でライセンスを MIT から LGPL-2.1-or-later に変更しました。そのコミット以降のベース、バックポートした修正、Runeon の変更は LGPL-2.1-or-later でライセンスされます。[`LICENSE`](LICENSE) を参照してください。DXMT `v0.80` 時点のコードは引き続き MIT ライセンスで利用できます。アップストリームのコミットは元の作者を保持します。本リポジトリは Runeon App のライセンスを変更しません。

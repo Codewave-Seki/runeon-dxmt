@@ -8,10 +8,9 @@ Runeon DXMT is the public source-maintenance repository for the DXMT component t
 
 ## Baseline and current release
 
-- Upstream: DXMT `v0.80` (`589adb7`) in [`base/dxmt-0.80.json`](base/dxmt-0.80.json); from `0.80-runeon.6`, upstream `main` at `3b25259` in [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)
-- Current stable source: [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5): 23 upstream fixes and 3 Runeon changes. Definition in [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
-- Current candidate: [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6): upstream `main` `3b25259` and 1 Runeon change. Definition in [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
-- Upstream review records: [MAINTENANCE.md](MAINTENANCE.md#review-records)
+- Upstream base: DXMT `main` at `3b25259` (no upstream release since `v0.80`), pinned in [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json); `0.80-runeon.5` uses `v0.80` (`589adb7`), pinned in [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
+- Current stable source: [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6): upstream `main` `3b25259` and 1 Runeon change, delivered to App `>=1.13 (10)`. Definition in [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
+- Upstream reviewed through: `3b25259`; see [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## Repository layout
 
@@ -40,24 +39,24 @@ source_root="$(scripts/fetch-source.sh)"
 scripts/integration-check.sh "$source_root"
 ```
 
-`integration-check.sh` applies every patch with `git am` to a temporary worktree of the pinned base and checks that the result is the tree recorded in the manifest. Building the DLLs and the Release bundles is described in [BUILDING.md](BUILDING.md).
+`integration-check.sh` applies every patch with `git am` to a temporary worktree of the pinned base and checks that the result is the tree recorded in the manifest. Building the component and the Release bundles is described in [BUILDING.md](BUILDING.md).
 
 ## Release history
 
-Each Release carries the patch-set bundle, the complete corresponding source and both SHA-256 files.
+Each Release carries the patch-set bundle, the complete corresponding source and both SHA-256 files; its notes describe what the patch set adds.
 
 | Patch set | State | Status |
 |---|---|---|
-| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | Pre-release | Candidate |
-| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | stable, latest | Current; built and shipped before this repository existed |
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | stable, latest | Current; delivered to App `>=1.13 (10)` |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | stable | Superseded, retained; built and shipped before this repository existed |
 
 ## Documentation
 
-- [BUILDING.md](BUILDING.md): building the DLLs and the source bundles
+- [BUILDING.md](BUILDING.md): building the component and the Release bundles
 - [MAINTENANCE.md](MAINTENANCE.md): upstream review, patch gates and release policy
 - [SECURITY.md](SECURITY.md): reporting security issues
 - [docs/upstream-reviews.md](docs/upstream-reviews.md): review records
 
 ## License
 
-DXMT changed its license from MIT to LGPL-2.1-or-later in upstream commit `ec357fd`, after `v0.80`. The backported fixes and Runeon's changes in this repository are licensed under LGPL-2.1-or-later; see [`LICENSE`](LICENSE). Code as of DXMT `v0.80` remains available under its MIT license. Upstream commits keep their original authorship. This repository does not change the license of the Runeon App.
+DXMT changed its license from MIT to LGPL-2.1-or-later in upstream commit `ec357fd`, after `v0.80`. Bases after that commit, the backported fixes and Runeon's changes are licensed under LGPL-2.1-or-later; see [`LICENSE`](LICENSE). Code as of DXMT `v0.80` remains available under its MIT license. Upstream commits keep their original authorship. This repository does not change the license of the Runeon App.

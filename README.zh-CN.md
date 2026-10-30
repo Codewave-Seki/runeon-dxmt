@@ -4,14 +4,13 @@
 
 > 英文文档为权威版本。中文与日文文档是为方便阅读提供的完整译本。
 
-Runeon DXMT 是 Runeon 所分发 DXMT 组件的公开源码维护仓库。它包含固定的 [DXMT](https://github.com/3Shain/dxmt) tag 或 commit、回移到该 tag 上的上游修复、Runeon 自己的修改，以及重建每个已分发组件精确对应源码的脚本。本仓库不作任何广泛的兼容性承诺，也不包含 Runeon App、Steam、游戏或 Apple 私有图形组件。
+Runeon DXMT 是 Runeon 所分发 DXMT 组件的公开源码维护仓库。它包含固定的 [DXMT](https://github.com/3Shain/dxmt) tag 或 commit、回移到该基线上的上游修复、Runeon 自己的修改，以及重建每个已分发组件精确对应源码的脚本。本仓库不作任何广泛的兼容性承诺，也不包含 Runeon App、Steam、游戏或 Apple 私有图形组件。
 
 ## 基线与当前版本
 
-- 上游：DXMT `v0.80`（`589adb7`），见 [`base/dxmt-0.80.json`](base/dxmt-0.80.json)；从 `0.80-runeon.6` 起为上游 `main` 的 `3b25259`，见 [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)
-- 当前正式源码：[`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5)：23 个上游修复与 3 个 Runeon 修改。定义见 [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
-- 当前候选：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：上游 `main` 的 `3b25259` 与 1 个 Runeon 修改。定义见 [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
-- 上游审查记录：[MAINTENANCE.md](MAINTENANCE.md#review-records)
+- 上游基线：DXMT `main` 的 `3b25259`（`v0.80` 之后上游未再发布 release），固定于 [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)；`0.80-runeon.5` 使用 `v0.80`（`589adb7`），固定于 [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
+- 当前正式源码：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：上游 `main` 的 `3b25259` 与 1 个 Runeon 修改，分发给 App `>=1.13 (10)`。定义见 [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
+- 上游审查范围：至 `3b25259`；见 [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## 仓库结构
 
@@ -40,24 +39,24 @@ source_root="$(scripts/fetch-source.sh)"
 scripts/integration-check.sh "$source_root"
 ```
 
-`integration-check.sh` 用 `git am` 把每个补丁依次应用到固定基线的临时 worktree 上，并检查结果是否为 manifest 记录的 tree。DLL 与 Release bundle 的构建见 [BUILDING.md](BUILDING.md)。
+`integration-check.sh` 用 `git am` 把每个补丁依次应用到固定基线的临时 worktree 上，并检查结果是否为 manifest 记录的 tree。组件与 Release bundle 的构建见 [BUILDING.md](BUILDING.md)。
 
 ## 发布历史
 
-每个 Release 都包含补丁集 bundle、完整对应源码与两个 SHA-256 文件。
+每个 Release 都包含补丁集 bundle、完整对应源码与两个 SHA-256 文件，说明中写有该补丁集新增的内容。
 
 | 补丁集 | 状态 | 说明 |
 |---|---|---|
-| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | Pre-release | 候选版本 |
-| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版，最新 | 当前版本；在本仓库建立前已构建并分发 |
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版，latest | 当前版本；分发给 App `>=1.13 (10)` |
+| [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版 | 已被接替，保留；在本仓库建立前已构建并分发 |
 
 ## 文档
 
-- [BUILDING.md](BUILDING.md)：构建 DLL 与源码 bundle
+- [BUILDING.md](BUILDING.md)：构建组件与 Release bundle
 - [MAINTENANCE.md](MAINTENANCE.md)：上游审查、补丁准入与发布策略
 - [SECURITY.md](SECURITY.md)：报告安全问题
 - [docs/upstream-reviews.md](docs/upstream-reviews.md)：审查记录
 
 ## 许可证
 
-DXMT 在 `v0.80` 之后的上游 commit `ec357fd` 中把许可证从 MIT 改为 LGPL-2.1-or-later。本仓库中的回移修复与 Runeon 修改按 LGPL-2.1-or-later 授权，见 [`LICENSE`](LICENSE)。DXMT `v0.80` 时的代码仍可按其 MIT 许可证使用。上游 commit 保留原作者。本仓库不改变 Runeon App 的许可证。
+DXMT 在 `v0.80` 之后的上游 commit `ec357fd` 中把许可证从 MIT 改为 LGPL-2.1-or-later。该 commit 之后的基线、回移修复与 Runeon 修改均按 LGPL-2.1-or-later 授权，见 [`LICENSE`](LICENSE)。DXMT `v0.80` 时的代码仍可按其 MIT 许可证使用。上游 commit 保留原作者。本仓库不改变 Runeon App 的许可证。
