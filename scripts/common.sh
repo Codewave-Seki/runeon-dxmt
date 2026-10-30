@@ -17,7 +17,9 @@ patchset_definition="$(cd "$repo_root" && cd "$patchset_definition" && pwd)"
 patch_manifest="$patchset_definition/manifest.json"
 series_file="$patchset_definition/series"
 # Each patch set names its base; earlier patch sets keep theirs.
-base_manifest="$repo_root/base/$(jq -r '.baseId' "$patch_manifest" 2>/dev/null || true).json"
+base_id_ref="$(jq -er '.baseId' "$patch_manifest" 2>/dev/null)" \
+  || { printf 'error: cannot read baseId from %s\n' "$patch_manifest" >&2; exit 1; }
+base_manifest="$repo_root/base/$base_id_ref.json"
 
 # git am needs a committer; manifests record the resulting tree, not commit IDs.
 export GIT_COMMITTER_NAME="Runeon DXMT" GIT_COMMITTER_EMAIL="support@runeon.app"
