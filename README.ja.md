@@ -4,12 +4,13 @@
 
 > 英語版が正式な文書です。中国語版と日本語版は参照用の完全な翻訳です。
 
-Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソース保守リポジトリです。固定された [DXMT](https://github.com/3Shain/dxmt) のタグ、そこへバックポートしたアップストリームの修正、Runeon 独自の変更、そして配布したすべてのコンポーネントに正確に対応するソースを再構築するスクリプトを収めています。広範な互換性を約束するものではなく、Runeon App、Steam、ゲーム、Apple の非公開グラフィックスコンポーネントは含みません。
+Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソース保守リポジトリです。固定された [DXMT](https://github.com/3Shain/dxmt) のタグまたはコミット、そこへバックポートしたアップストリームの修正、Runeon 独自の変更、そして配布したすべてのコンポーネントに正確に対応するソースを再構築するスクリプトを収めています。広範な互換性を約束するものではなく、Runeon App、Steam、ゲーム、Apple の非公開グラフィックスコンポーネントは含みません。
 
 ## ベースラインと現在のリリース
 
-- アップストリーム：DXMT `v0.80`（`589adb7`）と固定された submodule。[`base/dxmt-0.80.json`](base/dxmt-0.80.json) を参照
+- アップストリーム：DXMT `v0.80`（`589adb7`）。[`base/dxmt-0.80.json`](base/dxmt-0.80.json) を参照。`0.80-runeon.6` 以降はアップストリーム `main` の `3b25259`。[`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json) を参照
 - 現在の正式ソース：[`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5)：アップストリームの修正 23 件と Runeon の変更 3 件。定義は [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
+- 現在の候補：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：アップストリーム `main` の `3b25259` と Runeon の変更 1 件。定義は [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
 - アップストリームのレビュー記録：[MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## リポジトリ構成
@@ -39,7 +40,7 @@ source_root="$(scripts/fetch-source.sh)"
 scripts/integration-check.sh "$source_root"
 ```
 
-`integration-check.sh` は、固定タグの一時 worktree に `git am` で各パッチを順に適用し、結果が manifest に記録された tree と一致することを確認します。DLL と Release バンドルのビルドは [BUILDING.md](BUILDING.md) を参照してください。
+`integration-check.sh` は、固定ベースの一時 worktree に `git am` で各パッチを順に適用し、結果が manifest に記録された tree と一致することを確認します。DLL と Release バンドルのビルドは [BUILDING.md](BUILDING.md) を参照してください。
 
 ## リリース履歴
 
@@ -47,6 +48,7 @@ scripts/integration-check.sh "$source_root"
 
 | パッチセット | 状態 | 説明 |
 |---|---|---|
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | Pre-release | 候補版 |
 | [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版、最新 | 現行版。本リポジトリの作成前にビルド・配布済み |
 
 ## ドキュメント

@@ -4,12 +4,13 @@
 
 > This English document is authoritative. The Chinese and Japanese documents are complete translations for convenience.
 
-Runeon DXMT is the public source-maintenance repository for the DXMT component that Runeon ships. It holds a pinned [DXMT](https://github.com/3Shain/dxmt) tag, upstream fixes backported onto it, Runeon's own changes, and the scripts that rebuild the exact corresponding source of every shipped component. It makes no general compatibility promise, and it does not contain the Runeon App, Steam, games or Apple private graphics components.
+Runeon DXMT is the public source-maintenance repository for the DXMT component that Runeon ships. It holds a pinned [DXMT](https://github.com/3Shain/dxmt) tag or commit, upstream fixes backported onto it, Runeon's own changes, and the scripts that rebuild the exact corresponding source of every shipped component. It makes no general compatibility promise, and it does not contain the Runeon App, Steam, games or Apple private graphics components.
 
 ## Baseline and current release
 
-- Upstream: DXMT `v0.80` (`589adb7`), with its pinned submodules, in [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
+- Upstream: DXMT `v0.80` (`589adb7`) in [`base/dxmt-0.80.json`](base/dxmt-0.80.json); from `0.80-runeon.6`, upstream `main` at `3b25259` in [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)
 - Current stable source: [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5): 23 upstream fixes and 3 Runeon changes. Definition in [`patchsets/0.80-runeon.5`](patchsets/0.80-runeon.5/manifest.json)
+- Current candidate: [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6): upstream `main` `3b25259` and 1 Runeon change. Definition in [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
 - Upstream review records: [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## Repository layout
@@ -39,7 +40,7 @@ source_root="$(scripts/fetch-source.sh)"
 scripts/integration-check.sh "$source_root"
 ```
 
-`integration-check.sh` applies every patch with `git am` to a temporary worktree of the pinned tag and checks that the result is the tree recorded in the manifest. Building the DLLs and the Release bundles is described in [BUILDING.md](BUILDING.md).
+`integration-check.sh` applies every patch with `git am` to a temporary worktree of the pinned base and checks that the result is the tree recorded in the manifest. Building the DLLs and the Release bundles is described in [BUILDING.md](BUILDING.md).
 
 ## Release history
 
@@ -47,6 +48,7 @@ Each Release carries the patch-set bundle, the complete corresponding source and
 
 | Patch set | State | Status |
 |---|---|---|
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | Pre-release | Candidate |
 | [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | stable, latest | Current; built and shipped before this repository existed |
 
 ## Documentation
