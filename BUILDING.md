@@ -21,6 +21,14 @@ git rev-parse 'HEAD^{tree}'   # equals resultTree in the manifest
 
 ## Build the DLLs
 
+Set the deployment target before `meson setup`, in the same shell:
+
+```bash
+export MACOSX_DEPLOYMENT_TARGET=26.0
+```
+
+The component supports macOS 26 and later. Without this variable the toolchain targets the build machine's own SDK: on a newer macOS, `xcrun metal` compiles `dxmt_command.metal` for a newer AIR version (for example `air64_v29-apple-macosx27.0.0`), and Metal on macOS 26 refuses to load that library. Check the result with `LC_ALL=C grep -aoE 'air64_v[0-9]+-apple-macosx[0-9.]+' d3d11.dll`, which must report `macosx26.0.0`. Any Mach-O built in the same way, such as `winemetal.so`, must show `minos 26.0` in `otool -l`.
+
 Build directories stay outside the source tree, so the checkout stays clean for `build-source-bundle.sh`. Only the DLL targets are built; `winemetal` and `nvngx` are DXMT's release binaries for the base tag.
 
 ```bash
