@@ -9,7 +9,7 @@ Runeon DXMT carries upstream DXMT fixes and a few downstream changes on top of a
 3. Record the decisions, including exclusions, as a new section of [docs/upstream-reviews.md](docs/upstream-reviews.md), naming the upstream commit it reviewed through.
 4. Cherry-pick the selected commits with `git cherry-pick -x` onto the base plus the current series, then export them with `git format-patch` into a new patch set.
 
-Moving to a newer upstream tag is an alternative to backporting. It needs a new base file and a full review of what changes, including D3D12 code the component does not use but still links.
+Moving to a newer base is an alternative to backporting. The base is a newer upstream tag or, while upstream publishes no release, a commit on upstream `main` (`CLAUDE.md` §3). It needs a new base file and a full review of what changes, including D3D12 code the component does not use but still links.
 
 ## Review records
 

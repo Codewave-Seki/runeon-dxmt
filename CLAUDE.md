@@ -12,7 +12,7 @@ Conventions for working in this public repository, complete on their own: they a
 
 ## 1. Public repository boundary
 
-This repository holds a pinned DXMT source baseline plus ordered patch series, manifests and scripts. It never holds a DXMT source tree, build output, component archives, Wine prefixes or proprietary components.
+This repository holds pinned DXMT source baselines plus ordered patch series, manifests and scripts. It never holds a DXMT source tree, build output, component archives, Wine prefixes or proprietary components.
 
 Write every commit, patch, manifest entry, Release note and document in English, for an outside reader:
 
@@ -24,7 +24,7 @@ Write every commit, patch, manifest entry, Release note and document in English,
 
 | Path | Role |
 |---|---|
-| `base/dxmt-<version>.json` | Pinned upstream repository, tag, commit and submodule commits |
+| `base/<baseId>.json` | Pinned upstream repository, tag (or none), commit and submodule commits; each patch set names its base |
 | `patchsets/<patch-set-id>/{series,manifest.json}` | One definition per patch set. New work goes into the newest untagged one |
 | `patches/upstream/NNNN-<slug>.patch` | Commits cherry-picked from upstream DXMT |
 | `patches/runeon/01NN-<slug>.patch` | Downstream changes |
@@ -38,12 +38,13 @@ Scripts use the newest patch set unless `RUNEON_DXMT_PATCHSET_DEFINITION=patchse
 
 - A patch-set ID is `<DXMT version>-runeon.<N>`, for example `0.80-runeon.5`, and equals the version of the component built from it. `N` only increases; it continues the numbering already used for components built before this repository existed.
 - Moving to a new upstream tag adds a new `base/dxmt-<version>.json` and starts a new patch set. Existing base files stay, because earlier patch sets reference them.
+- When upstream has published no release for a long time, a base may pin a commit on upstream `main` instead: `base/dxmt-main-<short commit>.json` with `"tag": null`. The patch-set ID keeps the version of the last upstream release (for example `0.80-runeon.6` on a commit after `v0.80`), and `N` still only increases. Such a move needs the full review that `MAINTENANCE.md` describes for a new base.
 - A patch set's `resultTree` is the Git tree of the base after its whole series is applied. It is the patch set's identity check: recompute it after every series change.
 
 ## 4. What may enter a patch set
 
 - Upstream DXMT fixes are the trusted source. Take them with `git cherry-pick -x` so each keeps its author and a `(cherry picked from commit …)` line. A fix from another fork is adopted only after its defect is reproduced on this base.
-- Backport fixes in code the rebuilt DLLs contain: `d3d10`, `d3d11`, `dxgi`, `dxmt` and `nvapi`. `winemetal` (including the `airconv` shader converter) is DXMT's release binary for the base tag, so its fixes wait until a patch set also rebuilds it, which `BUILDING.md` must then describe. D3D12 features, refactors, test-only commits and build-system changes stay out unless a fix depends on them, and that dependency is stated in the review.
+- Backport fixes in code the component contains. Up to `0.80-runeon.5` that was only the rebuilt DLLs (`d3d10`, `d3d11`, `dxgi`, `dxmt`, `nvapi`), and `winemetal` and `nvngx` were DXMT's release binaries. From `0.80-runeon.6` every file of the component, including `winemetal` with the `airconv` shader converter and `nvngx`, is built from the patch set, so their fixes are in scope too. D3D12 features, refactors, test-only commits and build-system changes stay out unless a fix depends on them, and that dependency is stated in the review.
 - For every candidate, confirm the defect exists in the pinned base (same code, or a reachable path). A clean apply alone proves nothing.
 - Record every review decision, including exclusions and why, in a new section of `docs/upstream-reviews.md`.
 - Downstream changes fix API behaviour that applications observe on Windows. They never match game names, Steam AppIDs or executable names. A change that alters behaviour for reasons other than a fix must be opt-in through a value the caller sets explicitly, such as an environment variable, and without it behaviour is identical to the base.
