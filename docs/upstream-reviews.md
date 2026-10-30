@@ -59,3 +59,49 @@ Fixes in code the rebuilt DLLs (`d3d10core`, `d3d11`, `dxgi`, `nvapi64`) contain
 
 - The series applies to `v0.80` with `git am` and produces the recorded `resultTree`.
 - A local D3D10/D3D11 probe confirmed the observable fixes it covers (`ID3D11BlendState::GetDesc()`, `ID3D10Device::IAGetIndexBuffer()`, null output pointers in `Create{Blend|Rasterizer}State()`, and `Map()` with a NULL output on the immediate and a deferred context). The remaining fixes were checked by code review only; their drawing, shading and synchronisation paths were not run individually.
+
+<a id="base-main-3b252590-20261031"></a>
+## BASE-MAIN-3B252590-20261031
+
+- Previous base: DXMT `v0.80` (`589adb780354b461645b29999cefaf533594ee99`) with the 26 commits of `0.80-runeon.5`.
+- New base: upstream `main` at `3b252590cb0290e36fca6f088b5255b871d2d95a` (2026-10-27, `v0.80-365-g3b252590`), with the same submodule commits as `v0.80`. Upstream has published no release since `v0.80` (2026-04-23).
+- Upstream range: `v0.80..3b252590`, 365 commits: 239 `feat`, 82 `fix`, 20 `chore`, 15 `refactor`, 5 `ci`, 3 `build`, 1 `docs`. 343 are by Feifan He and 22 by nine other authors.
+- First patch set: `0.80-runeon.6`.
+
+### Why a new base
+
+- All 23 fixes of [BACKPORTS-0.80-20261020](#backports-0.80-20261020) are on `main`.
+- Downstream `0100` and `0101` are superseded upstream by `a148782` (DXGI surface on textures) and `e186434` (`SwapDeviceContextState()`).
+- `main` builds `winemetal`, with the `airconv` shader converter, and `nvngx` from source, so their fixes reach the component without a release.
+
+### Downstream changes
+
+| Patch | Summary |
+|---|---|
+| `0102` | `Map()` of a default resource with a NULL `pMappedResource` fails instead of aborting. `3b252590` still reaches `UNIMPLEMENTED("map-on-default: map")` in both `d3d11_context_imm.cpp` and `d3d11_context_def.cpp`; the patch applies unchanged. |
+
+### What changes for the component
+
+| Path | Commits | Effect |
+|---|---|---|
+| `src/d3d12` | 166 | Not built: `enable_d3d12` is off, and the component does not ship DXMT's `d3d12.dll` |
+| `src/airconv` | 107 | 55 are DXIL (shader model 6) work that only `d3d12.dll` uses. The rest change the DXBC path every D3D10/D3D11 shader takes: a new binding model (`BindingMap`, root-signature bindings), `VertexPuller` and `IOHelper`, 16-bit inputs and resources, and geometry and tessellation shader fixes. the shader cache version is now 26 (`AIRCONV_VERSION`; `kDXMTShaderCacheVersion` was 18 at `v0.80`), so existing shader caches are rebuilt |
+| `src/d3d11`, `src/d3d10`, `src/dxgi` | 36, 3, 10 | The 23 fixes already backported, keyed mutexes, DXGI surfaces, heap allocation, copies between texture types, `d3d11.maxTessFactor` |
+| `src/dxmt`, `src/winemetal`, `src/util` | 26, 24, 7 | `ClearRTV`/`ClearUAV` encoding, ref-counted fences, heap allocation, format plane counts, fixes for the Xcode 27 toolchain |
+| `src/nvapi`, `src/nvngx` | 1, 3 | Build-branch string fix (backported before); DLSS stand-in fixes for resources passed as `void *`, the default pre-exposure value and the NGX error value |
+
+The whole tree is LGPL-2.1-or-later since `ec357fd`; code as of `v0.80` remains available under MIT (`LICENSE.OLD`). The built files also contain third-party code: Microsoft's DXBCParser (MIT), code derived from DXVK (zlib), NVIDIA's NVAPI headers (MIT) and, statically linked into `winemetal.so`, LLVM 15.0.7 (Apache-2.0 WITH LLVM-exception).
+
+### Left out
+
+- Commits after `3b252590`.
+- `d3d12.dll`, the ARM64EC build and DXMT's native macOS build.
+
+### Verification
+
+- The series applies to `3b252590` with `git am` and produces the recorded `resultTree`.
+- A complete `x86_64` and `i386` build follows `BUILDING.md` with Xcode 27.1 (Metal 32023.921), mingw-w64 GCC 15.2.0, Meson 1.11.1, Ninja 1.13.2, CMake 4.4.5, LLVM 15.0.7, deployment target 26.0, and the Wine of runeon-wine `cx26.3-wine11.0-runeon.28`. Every DLL carries the Wine builtin mark, `winemetal.so` reports `minos 26.0`, and the Metal library in `d3d11.dll` targets `air64_v28-apple-macosx26.0.0`.
+- An earlier build of the same tree with the same toolchain had the same file set as DXMT's own CI build of `3b252590`, with sizes within 3%.
+- A D3D10/D3D11 probe (device creation at every feature level, a Direct2D render target, and the probes for the backported fixes and `0102`) gives output identical to `0.80-runeon.5`.
+- Two D3D11 games, a 32-bit Unity 5.5 title and a 64-bit Unity 6 title with an embedded Chromium, were compared with `0.80-runeon.5` using Metal's performance HUD: no new failure, and the same frame rate and GPU time per frame. A slow menu in each game behaved the same with both versions; samples placed it in the game's own CPU work and in Chromium start-up, not in DXMT.
+- Not verified: most of the 365 commits individually; geometry and tessellation shader paths, which no probe exercised; and running on macOS 26, because the test machine runs macOS 27.0.1.

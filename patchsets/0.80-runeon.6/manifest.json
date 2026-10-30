@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "patchSetId": "0.80-runeon.6",
+  "baseId": "dxmt-main-3b252590",
+  "resultTree": "af9f022fe7987553794416b937988878060643c8",
+  "patches": [
+    {
+      "order": 1,
+      "path": "patches/runeon/0102-fail-map-of-a-default-resource-with-a-null.patch",
+      "sha256": "c92bf73412f9494a61f8a0ded6bcbd89e5553b79cd46a380ddcb55e6884ce146",
+      "kind": "runeon",
+      "author": "Runeon Contributors <support@runeon.app>",
+      "summary": "d3d11: fail Map() of a default resource with a NULL pMappedResource (Runeon)"
+    }
+  ]
+}

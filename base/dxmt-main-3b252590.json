@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "baseId": "dxmt-main-3b252590",
+  "repository": "https://github.com/3Shain/dxmt.git",
+  "tag": null,
+  "commit": "3b252590cb0290e36fca6f088b5255b871d2d95a",
+  "describe": "v0.80-365-g3b25259",
+  "submodules": {
+    "external/nvapi": "d08488fcc82eef313b0464db37d2955709691e94",
+    "include/native/directx": "9df86f2341616ef1888ae59919feaa6d4fad693d"
+  },
+  "license": "LGPL-2.1-or-later",
+  "bundleTimestamp": "202610310000"
+}
