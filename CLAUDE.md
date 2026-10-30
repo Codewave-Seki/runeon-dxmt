@@ -44,7 +44,7 @@ Scripts use the newest patch set unless `RUNEON_DXMT_PATCHSET_DEFINITION=patchse
 ## 4. What may enter a patch set
 
 - Upstream DXMT fixes are the trusted source. Take them with `git cherry-pick -x` so each keeps its author and a `(cherry picked from commit …)` line. A fix from another fork is adopted only after its defect is reproduced on this base.
-- Backport fixes in code the component contains. Up to `0.80-runeon.5` that was only the rebuilt DLLs (`d3d10`, `d3d11`, `dxgi`, `dxmt`, `nvapi`), and `winemetal` and `nvngx` were DXMT's release binaries. From `0.80-runeon.6` every file of the component, including `winemetal` with the `airconv` shader converter and `nvngx`, is built from the patch set, so their fixes are in scope too. D3D12 features, refactors, test-only commits and build-system changes stay out unless a fix depends on them, and that dependency is stated in the review.
+- Backport fixes in code the component builds. From `0.80-runeon.6` that is every file, including `winemetal` (with the `airconv` shader converter) and `nvngx`; up to `0.80-runeon.5` only `d3d10core`, `d3d11`, `dxgi` and `nvapi64` were rebuilt (`BUILDING.md`). D3D12 features, refactors, test-only commits and build-system changes stay out unless a fix depends on them, and that dependency is stated in the review.
 - For every candidate, confirm the defect exists in the pinned base (same code, or a reachable path). A clean apply alone proves nothing.
 - Record every review decision, including exclusions and why, in a new section of `docs/upstream-reviews.md`.
 - Downstream changes fix API behaviour that applications observe on Windows. They never match game names, Steam AppIDs or executable names. A change that alters behaviour for reasons other than a fix must be opt-in through a value the caller sets explicitly, such as an environment variable, and without it behaviour is identical to the base.
@@ -90,7 +90,7 @@ These checks prove that the series applies and produces the recorded tree, nothi
 
 - A patch-set ID is immutable once tagged. The tag is an annotated tag named after the patch-set ID and points to the exact commit the component was built from.
 - A Release carries the patch-set bundle, the complete corresponding source and both `.sha256` files. Build bundles of a published patch set from its tag checkout; the bundle scripts refuse otherwise.
-- A Release stays a Pre-release until its component is in Production. Marking it stable is a maintainer decision and changes only its state and notes; the tag, commit, asset names, sizes and digests never change.
+- A Release stays a Pre-release until its component is in Production. Marking it stable or latest is a maintainer decision and changes only its state and notes; the tag, commit, asset names, sizes and digests never change.
 - After publishing, confirm that an anonymous download reproduces the SHA-256 files.
 - Record the Release in the README current line and release table, in one commit.
 

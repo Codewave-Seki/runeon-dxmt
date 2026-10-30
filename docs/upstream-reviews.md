@@ -85,7 +85,7 @@ Fixes in code the rebuilt DLLs (`d3d10core`, `d3d11`, `dxgi`, `nvapi64`) contain
 | Path | Commits | Effect |
 |---|---|---|
 | `src/d3d12` | 166 | Not built: `enable_d3d12` is off, and the component does not ship DXMT's `d3d12.dll` |
-| `src/airconv` | 107 | 55 are DXIL (shader model 6) work that only `d3d12.dll` uses. The rest change the DXBC path every D3D10/D3D11 shader takes: a new binding model (`BindingMap`, root-signature bindings), `VertexPuller` and `IOHelper`, 16-bit inputs and resources, and geometry and tessellation shader fixes. the shader cache version is now 26 (`AIRCONV_VERSION`; `kDXMTShaderCacheVersion` was 18 at `v0.80`), so existing shader caches are rebuilt |
+| `src/airconv` | 107 | 55 are DXIL (shader model 6) work that only `d3d12.dll` uses. The rest change the DXBC path every D3D10/D3D11 shader takes: a new binding model (`BindingMap`, root-signature bindings), `VertexPuller` and `IOHelper`, 16-bit inputs and resources, and geometry and tessellation shader fixes. The shader cache version is now 26 (`AIRCONV_VERSION`; `kDXMTShaderCacheVersion` was 18 at `v0.80`), so existing shader caches are rebuilt |
 | `src/d3d11`, `src/d3d10`, `src/dxgi` | 36, 3, 10 | The 23 fixes already backported, keyed mutexes, DXGI surfaces, heap allocation, copies between texture types, `d3d11.maxTessFactor` |
 | `src/dxmt`, `src/winemetal`, `src/util` | 26, 24, 7 | `ClearRTV`/`ClearUAV` encoding, ref-counted fences, heap allocation, format plane counts, fixes for the Xcode 27 toolchain |
 | `src/nvapi`, `src/nvngx` | 1, 3 | Build-branch string fix (backported before); DLSS stand-in fixes for resources passed as `void *`, the default pre-exposure value and the NGX error value |
