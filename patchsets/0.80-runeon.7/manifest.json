@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "patchSetId": "0.80-runeon.7",
   "baseId": "dxmt-main-3b252590",
-  "resultTree": "1f38e8994e850678b8f36033d505cf22e71e0177",
+  "resultTree": "9dd66d26b021de97f0cf11b49bad8b9d171f385e",
   "patches": [
     {
       "order": 1,
@@ -15,7 +15,7 @@
     {
       "order": 2,
       "path": "patches/runeon/0104-accept-identity-rotation-on-flip-model-swap.patch",
-      "sha256": "abf0c184e7eb4c39c4a80ea50b9adb03a5e442fec84699163e92a307d0f4844d",
+      "sha256": "09ad15f77d28dc4180f356720495953c3771c62a38e9be56a8a62f8d9b83811c",
       "kind": "runeon",
       "author": "Runeon Contributors <support@runeon.app>",
       "summary": "d3d11: accept identity rotation on flip-model swap chains (Runeon)"

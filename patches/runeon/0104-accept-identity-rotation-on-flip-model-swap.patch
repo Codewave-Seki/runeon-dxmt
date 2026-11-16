@@ -1,4 +1,4 @@
-From 603c23973346443b05834b7b812624b5421ddf9a Mon Sep 17 00:00:00 2001
+From 8ce1ddc1f5cfad6ce03bc74e6aeba6995281bbe9 Mon Sep 17 00:00:00 2001
 From: Runeon Contributors <support@runeon.app>
 Date: Mon, 16 Nov 2026 23:33:30 +0900
 Subject: [PATCH] d3d11: accept identity rotation on flip-model swap chains
@@ -21,7 +21,7 @@ No state is stored, so GetRotation keeps reporting identity.
  1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/src/d3d11/d3d11_swapchain.cpp b/src/d3d11/d3d11_swapchain.cpp
-index 86cf466..815d94f 100644
+index 86cf466..452c76c 100644
 --- a/src/d3d11/d3d11_swapchain.cpp
 +++ b/src/d3d11/d3d11_swapchain.cpp
 @@ -928,7 +928,15 @@ public:
@@ -29,7 +29,7 @@ index 86cf466..815d94f 100644
    STDMETHODCALLTYPE
    SetRotation(DXGI_MODE_ROTATION Rotation) final {
 -    ERR("DXGISwapChain1::SetRotation: not implemented");
-+    if (Rotation == DXGI_MODE_ROTATION_UNSPECIFIED || Rotation > DXGI_MODE_ROTATION_ROTATE270)
++    if (Rotation == DXGI_MODE_ROTATION_UNSPECIFIED || (UINT)Rotation > DXGI_MODE_ROTATION_ROTATE270)
 +      return E_INVALIDARG;
 +    // MSDN: rotation applies to flip-model swap chains only.
 +    if (desc_.SwapEffect <= DXGI_SWAP_EFFECT_SEQUENTIAL)
