@@ -1,0 +1,82 @@
+From 2934b63f34b2b792070633fa5633f4adb8cdc93b Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Mon, 16 Nov 2026 22:41:15 +0900
+Subject: [PATCH] dxmt: keep the Metal layer's opacity as the window system set
+ it (Runeon)
+
+The presenter forced every CAMetalLayer opaque, so a window that
+composites its alpha channel onto the desktop (DwmExtendFrameIntoClientArea
+with negative margins, as desktop overlays use) showed black where the
+swap chain is transparent. Read the layer's current opacity back before
+applying the other properties, so the window driver stays in charge of it.
+Windows without such composition keep opaque layers, because the driver
+creates them opaque.
+---
+ src/dxmt/dxmt_presenter.cpp | 16 +++++++++++++---
+ src/dxmt/dxmt_presenter.hpp |  2 ++
+ 2 files changed, 15 insertions(+), 3 deletions(-)
+
+diff --git a/src/dxmt/dxmt_presenter.cpp b/src/dxmt/dxmt_presenter.cpp
+index e5aec04..a4ae438 100644
+--- a/src/dxmt/dxmt_presenter.cpp
++++ b/src/dxmt/dxmt_presenter.cpp
+@@ -15,7 +15,7 @@ Presenter::Presenter(WMT::Device device, WMT::MetalLayer layer, InternalCommandL
+     sample_count_(sample_count) {
+   layer_.getProps(layer_props_);
+   layer_props_.device = device;
+-  layer_props_.opaque = true;
++  // opacity is kept as found: see applyLayerProps()
+   layer_props_.display_sync_enabled = false;
+   layer_props_.framebuffer_only = false; // how strangely setting it true results in worse performance
+   layer_props_.contents_scale = layer_props_.contents_scale * scale_factor;
+@@ -50,7 +50,7 @@ Presenter::changeLayerProperties(
+   if (should_invalidated)
+     pso_valid.clear(); // defer changes
+   else
+-    layer_.setProps(layer_props_);
++    applyLayerProps();
+   return should_invalidated;
+ }
+ 
+@@ -101,6 +101,16 @@ Presenter::changeGammaRamp(const DXMTGammaRamp *gamma_ramp) {
+   }
+ }
+ 
++void
++Presenter::applyLayerProps() {
++  // The window system owns the layer's opacity: opaque, unless the window
++  // composites its alpha channel onto the desktop (a DWM sheet of glass).
++  WMTLayerProps current;
++  layer_.getProps(current);
++  layer_props_.opaque = current.opaque;
++  layer_.setProps(layer_props_);
++}
++
+ Presenter::PresentState
+ Presenter::synchronizeLayerProperties() {
+   uint64_t display_setting_version = 0;
+@@ -122,7 +132,7 @@ Presenter::synchronizeLayerProperties() {
+   if (unlikely(!pso_valid.test_and_set())) {
+     frame_presented_.wait(frame_requested_);
+     buildRenderPipelineState(final_colorspace == WMTColorSpaceHDR_PQ, is_hdr && hdr_metadata != nullptr, sample_count_ > 1, gamma_version_ != 0);
+-    layer_.setProps(layer_props_);
++    applyLayerProps();
+     layer_.setColorSpace(final_colorspace);
+   }
+ 
+diff --git a/src/dxmt/dxmt_presenter.hpp b/src/dxmt/dxmt_presenter.hpp
+index 77eb35c..6351610 100644
+--- a/src/dxmt/dxmt_presenter.hpp
++++ b/src/dxmt/dxmt_presenter.hpp
+@@ -74,6 +74,8 @@ public:
+ private:
+   void buildRenderPipelineState(bool is_pq, bool with_hdr_metadata, bool is_ms, bool gamma_enable);
+ 
++  void applyLayerProps();
++
+   WMT::Device device_;
+   WMT::MetalLayer layer_;
+   InternalCommandLibrary &lib_;
+-- 
+2.54.0 (Apple Git-157)
+
