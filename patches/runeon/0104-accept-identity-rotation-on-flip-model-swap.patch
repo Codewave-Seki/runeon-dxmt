@@ -1,0 +1,46 @@
+From 603c23973346443b05834b7b812624b5421ddf9a Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Mon, 16 Nov 2026 23:33:30 +0900
+Subject: [PATCH] d3d11: accept identity rotation on flip-model swap chains
+ (Runeon)
+
+IDXGISwapChain1::SetRotation returned E_NOTIMPL for every call, even
+when the caller asks for DXGI_MODE_ROTATION_IDENTITY, which is the only
+rotation DXMT presents with and the one GetRotation already reports. An
+application that treats a failing SetRotation as fatal stops there.
+
+Follow the documented contract instead: DXGI_MODE_ROTATION_UNSPECIFIED
+or a value outside the enumeration fails with E_INVALIDARG, and a
+bit-block-transfer swap chain (DISCARD or SEQUENTIAL) fails with
+DXGI_ERROR_INVALID_CALL, because rotation applies to flip-model swap
+chains only. On a flip-model swap chain identity succeeds; the other
+rotations still fail with E_NOTIMPL and log the value, as DXVK does.
+No state is stored, so GetRotation keeps reporting identity.
+---
+ src/d3d11/d3d11_swapchain.cpp | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/d3d11/d3d11_swapchain.cpp b/src/d3d11/d3d11_swapchain.cpp
+index 86cf466..815d94f 100644
+--- a/src/d3d11/d3d11_swapchain.cpp
++++ b/src/d3d11/d3d11_swapchain.cpp
+@@ -928,7 +928,15 @@ public:
+   HRESULT
+   STDMETHODCALLTYPE
+   SetRotation(DXGI_MODE_ROTATION Rotation) final {
+-    ERR("DXGISwapChain1::SetRotation: not implemented");
++    if (Rotation == DXGI_MODE_ROTATION_UNSPECIFIED || Rotation > DXGI_MODE_ROTATION_ROTATE270)
++      return E_INVALIDARG;
++    // MSDN: rotation applies to flip-model swap chains only.
++    if (desc_.SwapEffect <= DXGI_SWAP_EFFECT_SEQUENTIAL)
++      return DXGI_ERROR_INVALID_CALL;
++    // Presentation is never rotated, so identity is already in effect.
++    if (Rotation == DXGI_MODE_ROTATION_IDENTITY)
++      return S_OK;
++    ERR("DXGISwapChain1::SetRotation: rotation ", Rotation, " not supported");
+     return E_NOTIMPL;
+   };
+ 
+-- 
+2.54.0 (Apple Git-157)
+
