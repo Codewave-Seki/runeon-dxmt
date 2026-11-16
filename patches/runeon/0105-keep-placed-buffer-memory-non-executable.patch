@@ -1,0 +1,354 @@
+From 7a8a894f0a11c301f757ee8d10d2a7a5e6ac0113 Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Tue, 17 Nov 2026 02:38:33 +0900
+Subject: [PATCH] winemetal: keep placed buffer memory non-executable (Runeon)
+
+When an executable, or a DLL it loads, lacks NX_COMPAT, Wine runs a
+32-bit process with DEP off and adds PROT_EXEC to every readable host
+mapping. DXMT places Metal buffers in such memory with
+newBufferWithBytesNoCopy, and on recent macOS Metal is very slow with
+it (upstream issue #161).
+
+Add WMTPlacedMemoryAllocate and WMTPlacedMemoryFree and use them for
+every CPU-placed allocation: placed buffers, linear textures, the dummy
+constant buffer, visibility result buffers and placed staging blocks.
+In a process with DEP off each allocation is a VirtualAlloc view of its
+own, so it stays inside the address range Wine manages, is page-aligned,
+forms a single VM region and shares no page with other data; a new unix
+call then drops PROT_EXEC from exactly that range. Wine adds it back
+only when VirtualProtect changes that range or when the process turns
+DEP from on to off; DXMT does neither. The process DEP policy is left
+alone. If the unix call fails, the memory stays executable as before
+and the first failures are logged with address, length and reason.
+
+The choice is made once per process from GetProcessDEPPolicy. That
+keeps allocations and frees paired, but it is not revisited: if the
+process later turns DEP from on to off, its placed memory becomes
+executable like all other memory. With DEP on, which includes every
+64-bit process, the helpers fall back to _aligned_malloc with page
+alignment, as before. Placed staging blocks used plain malloc and now
+get page alignment in every process. Each view costs 64 KiB of address
+space, which small buffers in DEP-off 32-bit processes now pay.
+
+None of the five callers has a way to report a failed allocation, and
+going on with NULL lets Metal allocate memory a 32-bit process may not
+reach, or adds offsets to NULL. A failed allocation now logs an error
+and aborts.
+---
+ src/dxmt/dxmt_buffer.cpp              | 10 ++++--
+ src/dxmt/dxmt_context.cpp             |  9 +++--
+ src/dxmt/dxmt_occlusion_query.hpp     | 10 ++++--
+ src/dxmt/dxmt_ring_bump_allocator.hpp |  9 +++--
+ src/dxmt/dxmt_texture.cpp             | 10 ++++--
+ src/winemetal/unix/winemetal_unix.c   | 29 +++++++++++++++
+ src/winemetal/winemetal.h             |  6 ++++
+ src/winemetal/winemetal_thunks.c      | 51 +++++++++++++++++++++++++++
+ 8 files changed, 124 insertions(+), 10 deletions(-)
+
+diff --git a/src/dxmt/dxmt_buffer.cpp b/src/dxmt/dxmt_buffer.cpp
+index 9a4139d..3ad041b 100644
+--- a/src/dxmt/dxmt_buffer.cpp
++++ b/src/dxmt/dxmt_buffer.cpp
+@@ -18,6 +18,7 @@
+ 
+ #include "dxmt_buffer.hpp"
+ #include "dxmt_format.hpp"
++#include "log/log.hpp"
+ #include "thread.hpp"
+ #include "util_likely.hpp"
+ #include "util_math.hpp"
+@@ -42,7 +43,12 @@ BufferAllocation::BufferAllocation(WMT::Device device, const WMTBufferInfo &info
+   }
+   fenceTrackers.resize(suballocation_count_);
+   if (flags_.test(BufferAllocationFlag::CpuPlaced)) {
+-    placed_buffer = wsi::aligned_malloc(info_.length, DXMT_PAGE_SIZE);
++    placed_buffer = WMTPlacedMemoryAllocate(info_.length);
++    // No caller of Buffer::allocate() can handle a failed allocation.
++    if (!placed_buffer) {
++      ERR("BufferAllocation: failed to allocate ", info_.length, " bytes of placed memory");
++      abort();
++    }
+     info_.memory.set(placed_buffer);
+   }
+   obj_ = device.newBuffer(info_);
+@@ -73,7 +79,7 @@ BufferAllocation::BufferAllocation(
+ void
+ BufferAllocation::free() {
+   if (placed_buffer) {
+-    wsi::aligned_free(placed_buffer);
++    WMTPlacedMemoryFree(placed_buffer);
+     placed_buffer = nullptr;
+   }
+   delete this;
+diff --git a/src/dxmt/dxmt_context.cpp b/src/dxmt/dxmt_context.cpp
+index 7b29f1e..79330ba 100644
+--- a/src/dxmt/dxmt_context.cpp
++++ b/src/dxmt/dxmt_context.cpp
+@@ -55,7 +55,12 @@ ArgumentEncodingContext::ArgumentEncodingContext(CommandQueue &queue, WMT::Devic
+   dummy_sampler_info_.max_anisotroy = 1;
+   dummy_sampler_info_.lod_average = false;
+   dummy_sampler_ = device.newSamplerState(dummy_sampler_info_);
+-  dummy_cbuffer_host_ = wsi::aligned_malloc(65536, DXMT_PAGE_SIZE);
++  dummy_cbuffer_host_ = WMTPlacedMemoryAllocate(65536);
++  // A constructor without a failure path.
++  if (!dummy_cbuffer_host_) {
++    ERR("ArgumentEncodingContext: failed to allocate the dummy constant buffer");
++    abort();
++  }
+   dummy_cbuffer_info_.length = 65536;
+   dummy_cbuffer_info_.memory.set(dummy_cbuffer_host_);
+   dummy_cbuffer_info_.options = WMTResourceOptionCPUCacheModeWriteCombined | WMTResourceStorageModeShared |
+@@ -70,7 +75,7 @@ ArgumentEncodingContext::ArgumentEncodingContext(CommandQueue &queue, WMT::Devic
+ };
+ 
+ ArgumentEncodingContext::~ArgumentEncodingContext() {
+-  wsi::aligned_free(dummy_cbuffer_host_);
++  WMTPlacedMemoryFree(dummy_cbuffer_host_);
+ };
+ 
+ template void ArgumentEncodingContext::encodeVertexBuffers<PipelineKind::Ordinary>(uint32_t slot_mask, uint64_t argument_buffer_offset);
+diff --git a/src/dxmt/dxmt_occlusion_query.hpp b/src/dxmt/dxmt_occlusion_query.hpp
+index 56e9e76..8398821 100644
+--- a/src/dxmt/dxmt_occlusion_query.hpp
++++ b/src/dxmt/dxmt_occlusion_query.hpp
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include "Metal.hpp"
++#include "log/log.hpp"
+ #include "rc/util_rc_ptr.hpp"
+ #include "wsi_platform.hpp"
+ #include <atomic>
+@@ -167,7 +168,12 @@ public:
+         visibility_result_heap_info.options = WMTResourceHazardTrackingModeUntracked;
+         visibility_result_heap_info.memory.set(nullptr);
+ #ifdef __i386__
+-        visibility_result_heap_info.memory.set(wsi::aligned_malloc(num_results * sizeof(uint64_t), DXMT_PAGE_SIZE));
++        visibility_result_heap_info.memory.set(WMTPlacedMemoryAllocate(num_results * sizeof(uint64_t)));
++        // A constructor without a failure path.
++        if (!visibility_result_heap_info.memory.get()) {
++          ERR("VisibilityResultReadback: failed to allocate ", num_results, " results of placed memory");
++          abort();
++        }
+ #endif
+         visibility_result_heap_info.length = num_results * sizeof(uint64_t);
+         visibility_result_heap = device.newBuffer(visibility_result_heap_info);
+@@ -177,7 +183,7 @@ public:
+       query->issue(seq_id, (uint64_t *)visibility_result_heap_info.memory.get(), num_results);
+     }
+ #ifdef __i386__
+-    wsi::aligned_free(visibility_result_heap_info.memory.get());
++    WMTPlacedMemoryFree(visibility_result_heap_info.memory.get());
+ #endif
+   }
+ 
+diff --git a/src/dxmt/dxmt_ring_bump_allocator.hpp b/src/dxmt/dxmt_ring_bump_allocator.hpp
+index 5c92d92..c548b49 100644
+--- a/src/dxmt/dxmt_ring_bump_allocator.hpp
++++ b/src/dxmt/dxmt_ring_bump_allocator.hpp
+@@ -97,7 +97,7 @@ public:
+ 
+     ~Block() {
+       if (mapped_address) {
+-        free(mapped_address);
++        WMTPlacedMemoryFree(mapped_address);
+         mapped_address = nullptr;
+       }
+     };
+@@ -116,7 +116,12 @@ public:
+   Block
+   allocate(size_t block_size) {
+     Block block{};
+-    block.mapped_address = placed_buffer_ ? malloc(block_size) : nullptr;
++    block.mapped_address = placed_buffer_ ? WMTPlacedMemoryAllocate(block_size) : nullptr;
++    // Suballocations add offsets to mapped_address and nothing can fail them.
++    if (placed_buffer_ && !block.mapped_address) {
++      ERR("StagingBufferBlockAllocator: failed to allocate ", block_size, " bytes of placed memory");
++      abort();
++    }
+     WMTBufferInfo info;
+     info.options = buffer_info_;
+     info.memory.set(block.mapped_address);
+diff --git a/src/dxmt/dxmt_texture.cpp b/src/dxmt/dxmt_texture.cpp
+index 0e5b4bd..7d12480 100644
+--- a/src/dxmt/dxmt_texture.cpp
++++ b/src/dxmt/dxmt_texture.cpp
+@@ -18,6 +18,7 @@
+ 
+ #include "dxmt_texture.hpp"
+ #include "dxmt_residency.hpp"
++#include "log/log.hpp"
+ #include "wsi_platform.hpp"
+ #include <atomic>
+ #include <cassert>
+@@ -91,7 +92,7 @@ TextureAllocation::TextureAllocation(
+ void
+ TextureAllocation::free(){
+ #ifdef __i386__
+-  wsi::aligned_free(mappedMemory);
++  WMTPlacedMemoryFree(mappedMemory);
+ #endif
+   delete this;
+ };
+@@ -194,7 +195,12 @@ Texture::allocate(Flags<TextureAllocationFlag> flags) {
+     buffer_info.options = options;
+     buffer_info.memory.set(nullptr);
+ #ifdef __i386__
+-    buffer_info.memory.set(wsi::aligned_malloc(bytes_per_image_, DXMT_PAGE_SIZE));
++    buffer_info.memory.set(WMTPlacedMemoryAllocate(bytes_per_image_));
++    // No caller of Texture::allocate() can handle a failed allocation.
++    if (!buffer_info.memory.get()) {
++      ERR("Texture: failed to allocate ", bytes_per_image_, " bytes of placed memory");
++      abort();
++    }
+ #endif
+     auto buffer = device_.newBuffer(buffer_info);
+     return new TextureAllocation(this, std::move(buffer), buffer_info.memory.get(), info, bytes_per_row_, flags);
+diff --git a/src/winemetal/unix/winemetal_unix.c b/src/winemetal/unix/winemetal_unix.c
+index 2776e47..06a6382 100644
+--- a/src/winemetal/unix/winemetal_unix.c
++++ b/src/winemetal/unix/winemetal_unix.c
+@@ -9,6 +9,11 @@
+ #include "objc/objc-runtime.h"
+ #include <bootstrap.h>
+ #include <mach/mach_port.h>
++#include <errno.h>
++#include <stdio.h>
++#include <string.h>
++#include <sys/mman.h>
++#include <unistd.h>
+ #define WINEMETAL_API
+ #include "../winemetal_thunks.h"
+ #include "../airconv_thunks.h"
+@@ -3181,6 +3186,28 @@ NTSTATUS _CacheWriter_alloc_init(void *obj);
+ NTSTATUS _CacheWriter_set(void *obj);
+ NTSTATUS _WMTSetMetalShaderCachePath(void *obj);
+ 
++static NTSTATUS
++_WMTPlacedMemoryRemoveExecute(void *obj) {
++  struct unixcall_generic_obj_uint64_noret *params = obj;
++  static atomic_int reported;
++  void *ptr = (void *)params->handle;
++  int err;
++
++  // Never round out to host pages: that could touch memory owned by someone else.
++  if ((params->handle | params->arg) & (getpagesize() - 1))
++    err = EINVAL;
++  // Wine adds PROT_EXEC again only when it changes this range itself: VirtualProtect
++  // on it, or the process turning DEP from on to off.
++  else if (!mprotect(ptr, params->arg, PROT_READ | PROT_WRITE))
++    return STATUS_SUCCESS;
++  else
++    err = errno;
++  if (atomic_fetch_add(&reported, 1) < 8)
++    fprintf(stderr, "err:winemetal:WMTPlacedMemoryRemoveExecute: %p+%#llx stays executable: %s\n", ptr,
++            (unsigned long long)params->arg, strerror(err));
++  return STATUS_UNSUCCESSFUL;
++}
++
+ const void *__wine_unix_call_funcs[] = {
+     &_NSObject_retain,
+     &_NSObject_release,
+@@ -3328,6 +3355,7 @@ const void *__wine_unix_call_funcs[] = {
+     &_MTLDevice_newIndirectCommandBuffer,
+     &_MTLDevice_newLibraryWithSource,
+     &_MTLTexture_getBytes,
++    &_WMTPlacedMemoryRemoveExecute,
+ };
+ 
+ #ifndef DXMT_NATIVE
+@@ -3478,5 +3506,6 @@ const void *__wine_unix_call_wow64_funcs[] = {
+     &_MTLDevice_newIndirectCommandBuffer,
+     &_MTLDevice_newLibraryWithSource,
+     &_MTLTexture_getBytes,
++    &_WMTPlacedMemoryRemoveExecute,
+ };
+ #endif
+diff --git a/src/winemetal/winemetal.h b/src/winemetal/winemetal.h
+index 97fffc7..b299e6f 100644
+--- a/src/winemetal/winemetal.h
++++ b/src/winemetal/winemetal.h
+@@ -2143,6 +2143,12 @@ WINEMETAL_API obj_handle_t MTLDevice_newIndirectCommandBuffer(
+ WINEMETAL_API obj_handle_t
+ MTLDevice_newLibraryWithSource(obj_handle_t device, const char *source, uint64_t length, obj_handle_t *err_out);
+ 
++/* Page-aligned memory for newBuffer() to place a buffer in; NULL on failure, which
++ * callers must not pass on, since newBuffer() reads NULL as "let Metal allocate". */
++WINEMETAL_API void *WMTPlacedMemoryAllocate(uint64_t length);
++
++WINEMETAL_API void WMTPlacedMemoryFree(void *ptr);
++
+ WINEMETAL_API void MTLTexture_getBytes(
+     obj_handle_t texture, struct WMTOrigin origin, struct WMTSize size, uint64_t level, uint64_t slice,
+     struct WMTMemoryPointer data, uint64_t bytes_per_row, uint64_t bytes_per_image
+diff --git a/src/winemetal/winemetal_thunks.c b/src/winemetal/winemetal_thunks.c
+index 42286c9..b1b552f 100644
+--- a/src/winemetal/winemetal_thunks.c
++++ b/src/winemetal/winemetal_thunks.c
+@@ -6,8 +6,10 @@
+ 
+ #include "winemetal_thunks.h"
+ #include <wineunixlib.h>
++#include "winbase.h"
+ #include "assert.h"
+ #include "string.h"
++#include <malloc.h>
+ 
+ #ifdef NDEBUG
+ #define UNIX_CALL(code, params) WINE_UNIX_CALL(code, params)
+@@ -1331,3 +1333,52 @@ MTLTexture_getBytes(
+   params.bytes_per_image = bytes_per_image;
+   UNIX_CALL(145, &params);
+ }
++
++/* When the executable, or a DLL it loads, lacks NX_COMPAT, Wine runs a 32-bit
++ * process with DEP off and maps every readable page executable on the host. Metal
++ * is very slow with buffers placed in such memory (upstream issue #161), so placed
++ * memory gets a view of its own that the unix side keeps read/write only. */
++static bool
++placed_memory_nonexec(void) {
++  static LONG state = -1;
++  DWORD flags;
++  BOOL permanent;
++
++  // ponytail: decided once per process so that allocate and free pair up. It is not
++  // revisited: if DEP later goes from on to off, Wine makes all memory executable
++  // again, and memory allocated while DEP was on was never given its own view.
++  if (state < 0)
++    InterlockedCompareExchange(
++        &state, GetProcessDEPPolicy(GetCurrentProcess(), &flags, &permanent) && !(flags & PROCESS_DEP_ENABLE), -1
++    );
++  return state;
++}
++
++WINEMETAL_API void *
++WMTPlacedMemoryAllocate(uint64_t length) {
++  struct unixcall_generic_obj_uint64_noret params;
++  void *ptr;
++
++  if (!placed_memory_nonexec())
++    return _aligned_malloc(length, 4096);
++  // A view of its own is page-aligned, one VM region, and shares no page with other data.
++  // ponytail: one 64 KiB-granular view per allocation, no sub-allocator; this spends
++  // 32-bit address space on small buffers, in DEP-off processes only.
++  length = (length + 4095) & ~(uint64_t)4095;
++  if (!(ptr = VirtualAlloc(NULL, length, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE)))
++    return NULL;
++  params.handle = PtrToUInt64(ptr);
++  params.arg = length;
++  // A failure is logged by the unix side, which knows why; the memory then stays
++  // executable, as before, and is still usable.
++  WINE_UNIX_CALL(146, &params);
++  return ptr;
++}
++
++WINEMETAL_API void
++WMTPlacedMemoryFree(void *ptr) {
++  if (!placed_memory_nonexec())
++    _aligned_free(ptr);
++  else if (ptr)
++    VirtualFree(ptr, 0, MEM_RELEASE);
++}
+-- 
+2.54.0 (Apple Git-157)
+

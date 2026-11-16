@@ -1,0 +1,138 @@
+From 897eb103cfe583d099a47ed4a38ac3123cbfdd93 Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Tue, 17 Nov 2026 03:55:32 +0900
+Subject: [PATCH] d3d11: pad rows of mappable linear 2D textures to 256 bytes
+ (Runeon)
+
+Mappable 2D textures (dynamic linear textures, the dynamic texture
+fallback and staging textures) take their row pitch from
+GetLinearTextureLayout, which aligned rows only to the Metal device
+minimum for the format. The resulting RowPitch can be close to the
+tight pixel row.
+
+D3D11 allows Map to return a padded RowPitch. An application was seen
+mapping a dynamic 2D texture with WRITE_DISCARD and writing each row
+with its own stride, wider than the returned RowPitch, so it overran
+every row and the end of the resource. Align the rows of the aligned
+2D layout to 256 bytes, or to the device minimum when that is larger.
+The writes observed there then stay inside the resource; padding
+cannot absorb arbitrary overruns. Pixel addressing through the returned
+RowPitch keeps its meaning, but memory use and performance can change. Compressed, depth and
+stencil formats and 1D and 3D textures keep their layout. Narrow
+textures and the mip levels of staging textures grow by a larger share
+than wide ones; an 804x256 RGBA8 texture grows from 823296 to 851968
+bytes.
+
+The tight (unaligned) layout started from an alignment of
+BytesPerTexel, but align() expects a power of two, so 12-byte formats
+(R32G32B32) got wrong row sizes, for example 20 bytes for one texel.
+Start from 1 instead; every other format is unchanged. This also
+corrects the minimum source pitch InitializeTextureData uses for these
+formats.
+
+Initial data copies now advance source and destination by their own
+pitch and copy only the pixel bytes of each row. The dynamic linear
+texture copied SysMemPitch bytes per row, which overran the
+destination row when the source pitch was wider, and copied the whole
+image at once when the pitches matched, which read past the pixels of
+the last source row. Staging textures copied min(row pitch, SysMemPitch)
+bytes, which could read past the last source row, and nothing at all
+for 1D textures, whose source pitch was taken as zero.
+---
+ src/d3d11/d3d11_resource_helper.cpp  | 11 +++++++----
+ src/d3d11/d3d11_resource_staging.cpp |  5 ++++-
+ src/d3d11/d3d11_texture_linear.cpp   | 18 +++++++++---------
+ 3 files changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/src/d3d11/d3d11_resource_helper.cpp b/src/d3d11/d3d11_resource_helper.cpp
+index 6624ed6..32f8631 100644
+--- a/src/d3d11/d3d11_resource_helper.cpp
++++ b/src/d3d11/d3d11_resource_helper.cpp
+@@ -580,7 +580,7 @@ GetLinearTextureLayout(
+   uint32_t w, h, d;
+   GetMipmapSize(&Desc, level, &w, &h, &d);
+   auto bytes_per_row_unaligned = metal_format.BytesPerTexel * w;
+-  auto alignment = std::max(1u, metal_format.BytesPerTexel);
++  uint32_t alignment = 1;
+   if (Aligned && !(metal_format.Flag & (MTL_DXGI_FORMAT_DEPTH_PLANER | MTL_DXGI_FORMAT_STENCIL_PLANER))) {
+     alignment = metal.minimumLinearTextureAlignmentForPixelFormat(metal_format.PixelFormat);
+   }
+@@ -625,9 +625,12 @@ GetLinearTextureLayout(
+     return S_OK;
+   }
+   auto bytes_per_row_unaligned = metal_format.BytesPerTexel * w;
+-  auto alignment = std::max(1u, metal_format.BytesPerTexel);
++  uint32_t alignment = 1;
+   if (Aligned && !(metal_format.Flag & (MTL_DXGI_FORMAT_DEPTH_PLANER | MTL_DXGI_FORMAT_STENCIL_PLANER))) {
+-    alignment = metal.minimumLinearTextureAlignmentForPixelFormat(metal_format.PixelFormat);
++    // D3D11 allows a padded RowPitch. An application was seen writing a wider
++    // stride than the RowPitch it got back; with 256-byte rows the writes seen
++    // there stay inside the resource. Addressing through RowPitch is unchanged.
++    alignment = std::max<uint32_t>(256, metal.minimumLinearTextureAlignmentForPixelFormat(metal_format.PixelFormat));
+   }
+   auto aligned_bytes_per_row = align(bytes_per_row_unaligned, alignment);
+   BytesPerRow = aligned_bytes_per_row;
+@@ -670,7 +673,7 @@ GetLinearTextureLayout(
+     return S_OK;
+   }
+   auto bytes_per_row_unaligned = metal_format.BytesPerTexel * w;
+-  auto alignment = std::max(1u, metal_format.BytesPerTexel);
++  uint32_t alignment = 1;
+   if (Aligned && !(metal_format.Flag & (MTL_DXGI_FORMAT_DEPTH_PLANER | MTL_DXGI_FORMAT_STENCIL_PLANER))) {
+     alignment = metal.minimumLinearTextureAlignmentForPixelFormat(metal_format.PixelFormat);
+   }
+diff --git a/src/d3d11/d3d11_resource_staging.cpp b/src/d3d11/d3d11_resource_staging.cpp
+index 68b4a46..1aa7e95 100644
+--- a/src/d3d11/d3d11_resource_staging.cpp
++++ b/src/d3d11/d3d11_resource_staging.cpp
+@@ -139,6 +139,9 @@ HRESULT CreateStagingTextureInternal(MTLD3D11Device *pDevice,
+     D3D11_ASSERT(subresources.size() == sub.SubresourceId);
+     auto buffer = new StagingResource(metal, buf_len, bpr, bpi);
+     if (pInitialData) {
++      // Copy only the pixels of each row; see TDynamicLinearTexture.
++      uint32_t row_bytes, _, __;
++      GetLinearTextureLayout(pDevice, finalDesc, sub.MipLevel, row_bytes, _, __, false);
+       auto mapped = buffer->mappedImmediateMemory();
+       auto bpi_read = is_3d_tex ? pInitialData[sub.SubresourceId].SysMemSlicePitch : 0;
+       auto bpr_read = is_1d_tex ? 0 : pInitialData[sub.SubresourceId].SysMemPitch;
+@@ -146,7 +149,7 @@ HRESULT CreateStagingTextureInternal(MTLD3D11Device *pDevice,
+         for (auto row = 0u; row < (bpi / bpr); row++) {
+           auto dst_data = ptr_add(mapped, image * bpi + row * bpr);
+           auto src_data = ptr_add(pInitialData[sub.SubresourceId].pSysMem, image * bpi_read + row * bpr_read);
+-          memcpy(dst_data, src_data, std::min(bpr, bpr_read));
++          memcpy(dst_data, src_data, row_bytes);
+         }
+       }
+     }
+diff --git a/src/d3d11/d3d11_texture_linear.cpp b/src/d3d11/d3d11_texture_linear.cpp
+index 15c6d15..045c5da 100644
+--- a/src/d3d11/d3d11_texture_linear.cpp
++++ b/src/d3d11/d3d11_texture_linear.cpp
+@@ -60,15 +60,15 @@ TDynamicLinearTexture(
+     D3D11_ASSERT(_.ptr() == nullptr);
+ 
+     if (pInitialData) {
+-      if (pInitialData->SysMemPitch != bytes_per_row_) {
+-        for (unsigned row = 0; row < this->texture_->height(); row++) {
+-          memcpy(
+-              ptr_add(allocation->mappedMemory, row * bytes_per_row_),
+-              ptr_add(pInitialData->pSysMem, row * pInitialData->SysMemPitch),
+-              pInitialData->SysMemPitch);
+-        }
+-      } else {
+-        memcpy(allocation->mappedMemory, pInitialData->pSysMem, bytes_per_image);
++      // Copy only the pixels of each row: either pitch may be wider, and the
++      // source is not guaranteed to extend past the pixels of its last row.
++      uint32_t row_bytes, image_bytes, slice_bytes;
++      GetLinearTextureLayout(device, *pDesc, 0, row_bytes, image_bytes, slice_bytes, false);
++      for (unsigned row = 0; row < this->texture_->height(); row++) {
++        memcpy(
++            ptr_add(allocation->mappedMemory, row * bytes_per_row_),
++            ptr_add(pInitialData->pSysMem, row * pInitialData->SysMemPitch), row_bytes
++        );
+       }
+     }
+     dynamic_ = new DynamicLinearTexture(this->texture_.ptr(), flags);
+-- 
+2.54.0 (Apple Git-157)
+
