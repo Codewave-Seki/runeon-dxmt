@@ -1,0 +1,5 @@
+patches/runeon/0102-fail-map-of-a-default-resource-with-a-null.patch
+patches/runeon/0103-keep-metal-layer-opacity-from-window-system.patch
+patches/runeon/0104-accept-identity-rotation-on-flip-model-swap.patch
+patches/runeon/0105-keep-placed-buffer-memory-non-executable.patch
+patches/runeon/0106-pad-mappable-linear-2d-texture-rows.patch

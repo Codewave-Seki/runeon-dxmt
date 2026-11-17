@@ -19,6 +19,7 @@ Release status lives in the [README](README.md) table and the GitHub Releases; t
 |---|---|---|
 | [BACKPORTS-0.80-20261020](docs/upstream-reviews.md#backports-0.80-20261020) | Fixes after `v0.80` on upstream `main`, and the downstream changes before them | `0.80-runeon.5` |
 | [BASE-MAIN-3B252590-20261031](docs/upstream-reviews.md#base-main-3b252590-20261031) | New base on upstream `main` `3b252590`: `v0.80..3b252590`, and the downstream change kept | `0.80-runeon.6` |
+| [BASE-MAIN-0DF86108-20261117](docs/upstream-reviews.md#base-main-0df86108-20261117) | New base on upstream `main` `0df86108`: `3b252590..0df86108`, taken whole by maintainer decision, and the downstream changes kept | `0.80-runeon.8` |
 
 ## Gates for entering a patch set
 

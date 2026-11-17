@@ -105,3 +105,96 @@ The whole tree is LGPL-2.1-or-later since `ec357fd`; code as of `v0.80` remains 
 - A D3D10/D3D11 probe (device creation at every feature level, a Direct2D render target, and the probes for the backported fixes and `0102`) gives output identical to `0.80-runeon.5`.
 - Two D3D11 games, a 32-bit Unity 5.5 title and a 64-bit Unity 6 title with an embedded Chromium, were compared with `0.80-runeon.5` using Metal's performance HUD: no new failure, and the same frame rate and GPU time per frame. A slow menu in each game behaved the same with both versions; samples placed it in the game's own CPU work and in Chromium start-up, not in DXMT.
 - Not verified: most of the 365 commits individually; geometry and tessellation shader paths, which no probe exercised; and running on macOS 26, because the test machine runs macOS 27.0.1.
+
+<a id="base-main-0df86108-20261117"></a>
+## BASE-MAIN-0DF86108-20261117
+
+- Previous base: upstream `main` at `3b252590cb0290e36fca6f088b5255b871d2d95a` ([BASE-MAIN-3B252590-20261031](#base-main-3b252590-20261031)).
+- New base: upstream `main` at `0df86108348bab2aaa5c4610a5eb63a9de9047ac` (2026-11-10, `v0.80-408-g0df8610`), with the same submodule commits as `3b252590`. Upstream has published no release since `v0.80` (2026-04-23).
+- Upstream range: `3b252590..0df86108`, 43 commits: 28 `feat`, 9 `fix`, 4 `refactor`, 2 `chore`. 38 are by Feifan He and 5 by Paweł Kołodziejski.
+- Reviewed through: `0df86108`.
+- First patch set: `0.80-runeon.8`.
+
+### Why a new base
+
+- The maintainer decided to take every upstream commit up to the newest point, without selecting individual commits, and to carry the downstream changes on top. The new base is therefore the upstream commit itself; nothing is cherry-picked.
+- The commits were not reviewed one by one for defects in the previous base. The table below records what each area changes for the component.
+
+### Downstream changes
+
+| Patch | Summary |
+|---|---|
+| `0102` | `Map()` of a default resource with a NULL `pMappedResource` fails instead of aborting. `0df86108` still reaches `UNIMPLEMENTED("map-on-default: map")`; the patch applies unchanged. |
+| `0103` | The presenter keeps the Metal layer's opacity as the window system set it, so a window that composites its alpha channel shows the transparent parts of the swap chain. No upstream commit in the range touches `src/dxmt`; the patch applies unchanged. |
+| `0104` | `IDXGISwapChain1::SetRotation()` accepts identity on flip-model swap chains. Upstream `b09855e` adds a format check to `CreateSwapChain()` in the same file but does not change `SetRotation()`; the patch applies unchanged. |
+| `0105` | Placed Metal buffer memory stays non-executable in 32-bit processes running with DEP off. No upstream commit in the range touches `src/dxmt` or `src/winemetal`; the patch applies unchanged. |
+| `0106` | Rows of mappable linear 2D textures are padded to 256 bytes, and initial data copies use each side's own pitch. Upstream `d2dd386` changes a bounds check in `d3d11_resource_staging.cpp` outside the patched code; the patch applies unchanged. |
+
+Admission notes:
+
+- `0105`: approved by the maintainer for default use without opt-in. It only changes the host protection of memory DXMT allocates for its own Metal buffers, in processes running with DEP off, to fix a locally reproduced stall; it does not change the process DEP policy.
+- `0106`: approved by the maintainer for default use. It adopts a padded row layout that conforms to the D3D11 contract, to resolve an application compatibility problem located on a local machine. It does not depend on identifying games and is not enabled per game. This decision does not mean that Windows drivers uniformly use this alignment, and it does not widen the admission scope for other patches.
+
+### What changes for the component
+
+| Path | Commits | Effect |
+|---|---|---|
+| `src/airconv` | 37 | 27 are DXIL (shader model 6) work that only `d3d12.dll` uses: hull and domain shaders, wave intrinsics, bitfield, `msad`, `cbufferLoad`, pull-mode evaluation and others. The DXBC path every D3D10/D3D11 shader takes changes in `4636f5c` (indexable hull shader control point input), `7456c4e` (clip and cull values pass through domain shaders), `961f57d` (hull control point write moved), `0df8610` (geometry shader index buffer sentinel check) and `6e69d0f` (input attribute type refactor). `AIRCONV_VERSION` stays 26, so shader caches written by earlier patch sets are not invalidated |
+| `src/d3d11` | 6 | `d2dd386` corrects off-by-one subresource index checks when staging and dynamic textures create a DXGI surface; `fae6cb8` fails `D3D11CreateDeviceAndSwapChain` with `E_INVALIDARG` for an unknown driver type, or a software driver type without a module; `b09855e` fails `CreateSwapChain` with `E_INVALIDARG` for a format Metal cannot present; `5e85544` returns `E_NOINTERFACE` for `ID3D10Device` on a device not created through `d3d10core`; `23a4d50` warns and returns `E_NOINTERFACE` for `ID3D11VideoContext`; `bf14438` fails `CreateDeferredContext*` with `DXGI_ERROR_INVALID_CALL` on a single-threaded device and leaves the output untouched on failure |
+| Build system | 0 | No change to `meson.build`, `meson_options.txt`, the cross files, the submodules or the installed file set |
+
+### Upstream commits included
+
+- `d2dd386` fix(d3d11): correct flawed out-of-bound checks. (Feifan He)
+- `961f57d` refactor(airconv): move hull control point write to main converter function (Feifan He)
+- `842ca5b` feat(airconv): implement dxil `binaryWithTwoOuts` (Feifan He)
+- `7c9f057` feat(airconv): implement dxil bitcast intrinsics (Feifan He)
+- `1f31cb5` feat(airconv): parse dxil tessellation metadata (Feifan He)
+- `f829356` chore(airconv): remove duplicated variable definitions (Feifan He)
+- `5809ad1` fix(airconv): always use `center_no_perspective` interpolation for position input in pixel shader (Feifan He)
+- `affe3ce` feat(airconv): handle dynamic row value of `loadInput` (Feifan He)
+- `2d4bda0` feat(airconv): parse dxil hull and domain shader (Feifan He)
+- `af9b19b` feat(airconv): implement dxil `SV_OutputControlPointID` and `SV_Domain` (Feifan He)
+- `90994b5` feat(airconv): support `storeOutput` in hull shader (Feifan He)
+- `2d788da` feat(airconv): implement dxil `storePatchConstant` (Feifan He)
+- `59b9efc` feat(airconv): implement dxil `loadOutputControlPoint` (Feifan He)
+- `af2c039` feat(airconv): implement dxil `loadPatchConstant` (Feifan He)
+- `180290b` refactor(airconv): dispatch dxil op translation by numerical id instead of name string (Feifan He)
+- `4636f5c` fix(airconv): make dxbc control point input indexable (Feifan He)
+- `7456c4e` feat(airconv): make clip/cull value pass through in dxbc domain shader (Feifan He)
+- `9af0654` feat(airconv): implement dxil bitfield extract (Feifan He)
+- `647b002` feat(airconv): implement dxil `SV_StencilRef` (Feifan He)
+- `fae6cb8` fix(d3d11): fixed handling invalid Driver Type in `D3D11CreateDeviceAndSwapChain` (Paweł Kołodziejski)
+- `b09855e` fix(d3d11): fixed handling invalid pixel format for swapchain buffer in `CreateSwapChain` (Paweł Kołodziejski)
+- `5e85544` fix(d3d11): fixed handling invalid device query in `QueryInterface` (Paweł Kołodziejski)
+- `23a4d50` fix(d3d11): warning about missing D3D11VideoContext implementation in `QueryInterface` (Paweł Kołodziejski)
+- `bf14438` fix(d3d11): handle invalid call for deferred context when device is single threaded enabled. (Paweł Kołodziejski)
+- `7b18b4e` feat(airconv): return zero for dxil `viewID` (Feifan He)
+- `6cfa42a` feat(airconv): implement dxil `renderTargetGetSamplePosition` (Feifan He)
+- `640ad70` feat(airconv): implement dxil pull-mode evaluation (Feifan He)
+- `c01e79e` feat(airconv): implement dxil `waveAnyTrue` and `waveAllTrue` (Feifan He)
+- `6d705a1` feat(airconv): implement dxil `waveIsFirstLane` (Feifan He)
+- `9d882b3` feat(airconv): implement dxil `waveActiveOp` and `wavePrefixOp` (Feifan He)
+- `17c6dba` feat(airconv): implement dxil `waveAllBitCount` and `wavePrefixBitCount` (Feifan He)
+- `db02949` feat(airconv): implement dxil `waveActiveBit` (Feifan He)
+- `83a322f` feat(airconv): implement dxil `waveActiveBallot` (Feifan He)
+- `c08669d` feat(airconv): implement dxil `waveReadLaneFirst` (Feifan He)
+- `7b0af44` feat(airconv): implement dxil `waveActiveAllEqual` (Feifan He)
+- `866b0b7` feat(airconv): implement dxil `msad` (Feifan He)
+- `4f248a8` feat(airconv): implement dxil `bfi` (Feifan He)
+- `bebf48e` feat(airconv): implement dxil buffer oob access behavior (Feifan He)
+- `c8a68ee` feat(airconv): implement dxil `cbufferLoad` (Feifan He)
+- `c683793` chore(airconv): skip inspecting input semantics of geometry shader (Feifan He)
+- `b75f71d` refactor(airconv): remove one indirection of `RegisterComponentType` for dxil ps output (Feifan He)
+- `6e69d0f` refactor(airconv): remove `air::InputAttributeComponentType` (Feifan He)
+- `0df8610` fix(airconv): correct index buffer sentinel value check in gs converter (Feifan He)
+
+### Left out
+
+- Commits after `0df86108`.
+- `d3d12.dll`, the ARM64EC build and DXMT's native macOS build.
+
+### Verification
+
+- The series applies to `0df86108` with `git am` and produces the recorded `resultTree`.
+- Not verified yet: the complete `x86_64` and `i386` build, the API probes and the game comparison with `0.80-runeon.7`. The patch set is not tagged.
