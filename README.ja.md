@@ -8,9 +8,9 @@ Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソ�
 
 ## ベースラインと現在のリリース
 
-- アップストリームのベース：DXMT `main` の `3b25259`（`v0.80` 以降アップストリームのリリースなし）。[`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json) で固定。`0.80-runeon.5` は `v0.80`（`589adb7`）を使用し、[`base/dxmt-0.80.json`](base/dxmt-0.80.json) で固定
-- 現在の正式ソース：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：アップストリーム `main` の `3b25259` と Runeon の変更 1 件。App `>=1.13 (10)` に配布。定義は [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
-- アップストリームのレビュー範囲：`3b25259` まで。[MAINTENANCE.md](MAINTENANCE.md#review-records) を参照
+- アップストリームのベース：DXMT `main` の `0df8610`（`v0.80` 以降アップストリームのリリースなし）。[`base/dxmt-main-0df86108.json`](base/dxmt-main-0df86108.json) で固定。`0.80-runeon.6` は `main` の `3b25259` を使用し、[`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json) で固定。`0.80-runeon.5` は `v0.80`（`589adb7`）を使用し、[`base/dxmt-0.80.json`](base/dxmt-0.80.json) で固定
+- 現在の正式ソース：[`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8)：アップストリーム `main` の `0df8610` と Runeon の変更 5 件。App `>=1.16 (39)` に配布。定義は [`patchsets/0.80-runeon.8`](patchsets/0.80-runeon.8/manifest.json)
+- アップストリームのレビュー範囲：`0df8610` まで。[MAINTENANCE.md](MAINTENANCE.md#review-records) を参照
 
 ## リポジトリ構成
 
@@ -47,7 +47,8 @@ scripts/integration-check.sh "$source_root"
 
 | パッチセット | 状態 | 説明 |
 |---|---|---|
-| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版、latest | 現行版。App `>=1.13 (10)` に配布 |
+| [`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8) | 正式版、latest | 現行版。App `>=1.16 (39)` に配布 |
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版 | App `1.13 (10)`–`1.16 (38)` に配布 |
 | [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版 | 置き換え済み、保持。本リポジトリの作成前にビルド・配布済み |
 
 ## ドキュメント

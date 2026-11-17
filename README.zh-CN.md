@@ -8,9 +8,9 @@ Runeon DXMT 是 Runeon 所分发 DXMT 组件的公开源码维护仓库。它包
 
 ## 基线与当前版本
 
-- 上游基线：DXMT `main` 的 `3b25259`（`v0.80` 之后上游未再发布 release），固定于 [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)；`0.80-runeon.5` 使用 `v0.80`（`589adb7`），固定于 [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
-- 当前正式源码：[`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6)：上游 `main` 的 `3b25259` 与 1 个 Runeon 修改，分发给 App `>=1.13 (10)`。定义见 [`patchsets/0.80-runeon.6`](patchsets/0.80-runeon.6/manifest.json)
-- 上游审查范围：至 `3b25259`；见 [MAINTENANCE.md](MAINTENANCE.md#review-records)
+- 上游基线：DXMT `main` 的 `0df8610`（`v0.80` 之后上游未再发布 release），固定于 [`base/dxmt-main-0df86108.json`](base/dxmt-main-0df86108.json)；`0.80-runeon.6` 使用 `main` 的 `3b25259`，固定于 [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json)；`0.80-runeon.5` 使用 `v0.80`（`589adb7`），固定于 [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
+- 当前正式源码：[`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8)：上游 `main` 的 `0df8610` 与 5 个 Runeon 修改，分发给 App `>=1.16 (39)`。定义见 [`patchsets/0.80-runeon.8`](patchsets/0.80-runeon.8/manifest.json)
+- 上游审查范围：至 `0df8610`；见 [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## 仓库结构
 
@@ -47,7 +47,8 @@ scripts/integration-check.sh "$source_root"
 
 | 补丁集 | 状态 | 说明 |
 |---|---|---|
-| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版，latest | 当前版本；分发给 App `>=1.13 (10)` |
+| [`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8) | 正式版，latest | 当前版本；分发给 App `>=1.16 (39)` |
+| [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | 正式版 | 分发给 App `1.13 (10)`–`1.16 (38)` |
 | [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | 正式版 | 已被接替，保留；在本仓库建立前已构建并分发 |
 
 ## 文档
