@@ -197,4 +197,8 @@ Admission notes:
 ### Verification
 
 - The series applies to `0df86108` with `git am` and produces the recorded `resultTree`.
-- Not verified yet: the complete `x86_64` and `i386` build, the API probes and the game comparison with `0.80-runeon.7`. The patch set is not tagged.
+- A complete `x86_64` and `i386` build follows `BUILDING.md` with Xcode 27.1 (Metal 32023.921), mingw-w64 GCC 15.2.0, Meson 1.11.1, Ninja 1.13.2, CMake 4.4.5, LLVM 15.0.7, deployment target 26.0, and the Wine of runeon-wine `cx26.3-wine11.0-runeon.37`. Every DLL carries the Wine builtin mark, `winemetal.so` reports `minos 26.0`, and the Metal library in `d3d11.dll` targets `air64_v28-apple-macosx26.0.0`.
+- Two independent clones of the tagged commit produce byte-identical patch-set and source bundles. The released build differs from the build used for testing only in PE timestamps and checksums and in the build directory embedded in `winemetal.so`.
+- In a fresh prefix, on both `i386` and `x86_64`, the `SetRotation()` probe for `0104`, the linear texture probe for `0106` and the probes for the backported fixes pass. The `0106` probe covers several widths, tight and padded source pitches, dynamic and staging textures and rows read back after a GPU copy; an 804×256 `R8G8B8A8` texture gets `RowPitch` 3328.
+- Games: the 32-bit D3D11 title that motivated `0104`–`0106` no longer aborts at start-up, no longer stalls periodically with DEP off, and no longer crashes on its texture uploads; another D3D11 title shows no new failure.
+- Not verified: most of the 43 commits individually; geometry and tessellation shader paths, which no probe exercised; and running on macOS 26, because the test machine runs macOS 27.0.1.
