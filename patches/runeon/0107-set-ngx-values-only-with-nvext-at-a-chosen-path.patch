@@ -1,0 +1,200 @@
+From 4cea8e23a3f9cc98000ddca90457f2427f04eacf Mon Sep 17 00:00:00 2001
+From: Runeon Contributors <support@runeon.app>
+Date: Sun, 22 Nov 2026 23:00:00 +0900
+Subject: [PATCH] dxgi: set NGX values only with NVEXT, at a chosen path
+ (Runeon)
+
+InitializeVendorExtensionNV ran in every 64-bit process that loaded
+dxgi. With DXMT_ENABLE_NVEXT unset it deleted the global NGX registry
+values ({41FCC608-...} under NVIDIA Corporation\Global and nvlddmkm,
+and NGXCore\FullPath), and with it set it pointed FullPath at
+C:\Windows\System32. A D3D runtime on Windows never removes these
+values at process start, and NGX reads them, so one process without
+the extension took them away from another process in the same prefix
+that had just set them. Without NVEXT nothing is created, written or
+deleted now.
+
+With NVEXT on, FullPath takes DXMT_NVEXT_NGX_PATH when it is set, so
+NGX can load its core (_nvngx.dll) from a directory other than
+System32; otherwise it stays C:\Windows\System32 as before. The log
+line naming the path starts with runeon-dxmt-nvext-ngx-path-1, which
+also lets a launcher recognise this behaviour in the built dxgi.dll.
+
+DXMT_ENABLE_NVEXT and DXMT_NVEXT_NGX_PATH are read from the Unix
+environment first, through a new winemetal call
+WMTGetUnixEnvironmentVariable, and then from the Windows environment
+as before. A launcher can then enable the extension for one process:
+a Wine child takes its Windows environment from its parent, so a value
+set only in the Unix environment of that process does not reach other
+programs through it. The new unix call is appended to both call
+tables; winemetal.dll and winemetal.so are built together.
+
+With NVEXT on, DXMT's nvngx converts DLSS super resolution calls to
+MetalFX. DLSS and NVIDIA are trademarks of NVIDIA Corporation. Runeon
+is not affiliated with NVIDIA.
+---
+ src/dxgi/dxgi.cpp                   | 29 ++++++++++++++++++++++-------
+ src/winemetal/unix/winemetal_unix.c | 15 +++++++++++++++
+ src/winemetal/winemetal.h           |  6 ++++++
+ src/winemetal/winemetal_thunks.c    | 10 ++++++++++
+ src/winemetal/winemetal_thunks.h    |  6 ++++++
+ 5 files changed, 59 insertions(+), 7 deletions(-)
+
+diff --git a/src/dxgi/dxgi.cpp b/src/dxgi/dxgi.cpp
+index e9d8100..f91f8bc 100644
+--- a/src/dxgi/dxgi.cpp
++++ b/src/dxgi/dxgi.cpp
+@@ -13,14 +13,32 @@ VendorExtension g_extension_enabled = VendorExtension::None;
+ #ifdef _WIN32
+ std::once_flag nvext_init;
+ 
++// A launcher may set these in the Unix environment of one process only; the Windows
++// environment is still honoured for manual use.
++static std::string GetVendorExtensionVar(const char *name) {
++  char value[MAX_PATH];
++  if (WMTGetUnixEnvironmentVariable(name, value, sizeof(value)) && value[0])
++    return value;
++  return env::getEnvVar(name);
++}
++
+ static void InitializeVendorExtensionNV() {
+ #ifdef __i386__
+   return;
+ #endif
++  // The NGX values are global to the prefix. Windows D3D runtimes never remove them,
++  // and another process may rely on them, so nothing is touched unless NVEXT is on.
++  if (GetVendorExtensionVar("DXMT_ENABLE_NVEXT") != "1")
++    return;
+   HKEY key1 = nullptr, key2 = nullptr, key3 = nullptr;
+   auto name1 = L"{41FCC608-8496-4DEF-B43E-7D9BD675A6FF}";
+   auto name2 = L"FullPath";
+-  WCHAR value3[] = L"C:\\Windows\\System32";
++  // NGX loads its core (_nvngx.dll) from FullPath; the default is upstream's.
++  std::wstring value3 = L"C:\\Windows\\System32";
++  if (auto path = GetVendorExtensionVar("DXMT_NVEXT_NGX_PATH"); !path.empty()) {
++    value3 = str::tows(path.c_str());
++    Logger::info(str::format("runeon-dxmt-nvext-ngx-path-1: NGX core path ", path));
++  }
+   if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                       L"SOFTWARE\\NVIDIA Corporation\\Global", 0, nullptr, 0,
+                       KEY_ALL_ACCESS, nullptr, &key1, nullptr) ||
+@@ -32,15 +50,12 @@ static void InitializeVendorExtensionNV() {
+                       nullptr, 0, KEY_ALL_ACCESS, nullptr, &key3, nullptr)) {
+     goto cleanup;
+   }
+-  if (env::getEnvVar("DXMT_ENABLE_NVEXT") != "1") {
+-    RegDeleteValueW(key1, name1);
+-    RegDeleteValueW(key2, name1);
+-    RegDeleteValueW(key3, name2);
+-  } else {
++  {
+     DWORD _1 = 1;
+     RegSetValueExW(key1, name1, 0, REG_DWORD, (const BYTE *)&_1, sizeof(_1));
+     RegSetValueExW(key2, name1, 0, REG_DWORD, (const BYTE *)&_1, sizeof(_1));
+-    RegSetValueExW(key3, name2, 0, REG_SZ, (const BYTE *)value3, sizeof(value3));
++    RegSetValueExW(key3, name2, 0, REG_SZ, (const BYTE *)value3.c_str(),
++                   (value3.size() + 1) * sizeof(WCHAR));
+     Logger::info("Vendor extension enabled: NVEXT");
+     g_extension_enabled = VendorExtension::Nvidia;
+   }
+diff --git a/src/winemetal/unix/winemetal_unix.c b/src/winemetal/unix/winemetal_unix.c
+index 06a6382..93285a1 100644
+--- a/src/winemetal/unix/winemetal_unix.c
++++ b/src/winemetal/unix/winemetal_unix.c
+@@ -11,6 +11,7 @@
+ #include <mach/mach_port.h>
+ #include <errno.h>
+ #include <stdio.h>
++#include <stdlib.h>
+ #include <string.h>
+ #include <sys/mman.h>
+ #include <unistd.h>
+@@ -3186,6 +3187,18 @@ NTSTATUS _CacheWriter_alloc_init(void *obj);
+ NTSTATUS _CacheWriter_set(void *obj);
+ NTSTATUS _WMTSetMetalShaderCachePath(void *obj);
+ 
++static NTSTATUS
++_WMTGetUnixEnvironmentVariable(void *obj) {
++  struct unixcall_getunixenv *params = obj;
++  const char *value = getenv(params->name.ptr);
++  size_t length;
++
++  if (!value || (length = strlen(value)) >= params->size)
++    return STATUS_UNSUCCESSFUL;
++  memcpy(params->buffer.ptr, value, length + 1);
++  return STATUS_SUCCESS;
++}
++
+ static NTSTATUS
+ _WMTPlacedMemoryRemoveExecute(void *obj) {
+   struct unixcall_generic_obj_uint64_noret *params = obj;
+@@ -3356,6 +3369,7 @@ const void *__wine_unix_call_funcs[] = {
+     &_MTLDevice_newLibraryWithSource,
+     &_MTLTexture_getBytes,
+     &_WMTPlacedMemoryRemoveExecute,
++    &_WMTGetUnixEnvironmentVariable,
+ };
+ 
+ #ifndef DXMT_NATIVE
+@@ -3507,5 +3521,6 @@ const void *__wine_unix_call_wow64_funcs[] = {
+     &_MTLDevice_newLibraryWithSource,
+     &_MTLTexture_getBytes,
+     &_WMTPlacedMemoryRemoveExecute,
++    &_WMTGetUnixEnvironmentVariable,
+ };
+ #endif
+diff --git a/src/winemetal/winemetal.h b/src/winemetal/winemetal.h
+index b299e6f..f22d097 100644
+--- a/src/winemetal/winemetal.h
++++ b/src/winemetal/winemetal.h
+@@ -2149,6 +2149,12 @@ WINEMETAL_API void *WMTPlacedMemoryAllocate(uint64_t length);
+ 
+ WINEMETAL_API void WMTPlacedMemoryFree(void *ptr);
+ 
++/* Copies the Unix environment variable `name` into `buffer`, NUL-terminated. Returns
++ * false when it is unset or does not fit in `size` bytes. A launcher can set a
++ * variable there for one process, which a child does not get through its Windows
++ * environment. */
++WINEMETAL_API bool WMTGetUnixEnvironmentVariable(const char *name, char *buffer, uint64_t size);
++
+ WINEMETAL_API void MTLTexture_getBytes(
+     obj_handle_t texture, struct WMTOrigin origin, struct WMTSize size, uint64_t level, uint64_t slice,
+     struct WMTMemoryPointer data, uint64_t bytes_per_row, uint64_t bytes_per_image
+diff --git a/src/winemetal/winemetal_thunks.c b/src/winemetal/winemetal_thunks.c
+index b1b552f..5719de2 100644
+--- a/src/winemetal/winemetal_thunks.c
++++ b/src/winemetal/winemetal_thunks.c
+@@ -1382,3 +1382,13 @@ WMTPlacedMemoryFree(void *ptr) {
+   else if (ptr)
+     VirtualFree(ptr, 0, MEM_RELEASE);
+ }
++
++WINEMETAL_API bool
++WMTGetUnixEnvironmentVariable(const char *name, char *buffer, uint64_t size) {
++  struct unixcall_getunixenv params;
++  WMT_MEMPTR_SET(params.name, name);
++  WMT_MEMPTR_SET(params.buffer, buffer);
++  params.size = size;
++  // Not UNIX_CALL: an unset variable is an expected failure.
++  return !WINE_UNIX_CALL(147, &params);
++}
+diff --git a/src/winemetal/winemetal_thunks.h b/src/winemetal/winemetal_thunks.h
+index 37645c9..281a5dc 100644
+--- a/src/winemetal/winemetal_thunks.h
++++ b/src/winemetal/winemetal_thunks.h
+@@ -344,6 +344,12 @@ struct unixcall_setmetalcachepath {
+   uint64_t ret_success;
+ };
+ 
++struct unixcall_getunixenv {
++  struct WMTConstMemoryPointer name;
++  struct WMTMemoryPointer buffer;
++  uint64_t size;
++};
++
+ struct unixcall_bootstrap {
+   char name[128];
+   uint32_t mach_port;
+-- 
+2.54.0 (Apple Git-157)
+
