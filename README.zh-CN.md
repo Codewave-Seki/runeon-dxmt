@@ -30,6 +30,7 @@ Runeon DXMT 是 Runeon 所分发 DXMT 组件的公开源码维护仓库。它包
 - Runeon 修改从不按游戏名、Steam AppID 或可执行文件名匹配。
 - 每个进入 Production 的组件都有一个不可变的正式 Release，包含精确的补丁集 bundle、完整对应源码与 SHA-256 文件。候选版本保持为 Pre-release。tag 与 Release 资产从不移动、替换或删除。
 - 组件的打包、签名与分发由 Runeon 产品仓库负责。
+- 设置 `DXMT_ENABLE_NVEXT=1` 时，组件的 `nvngx` 把 DLSS 调用转换为 MetalFX。自 `0.80-runeon.9` 起，`DXMT_NVEXT_NGX_PATH` 指定 NGX 加载其核心的目录。Runeon 为分发的 `nvngx.dll` 附加自己的 Authenticode 签名，源码不因此改动。
 
 ## 验证与构建
 
@@ -57,6 +58,10 @@ scripts/integration-check.sh "$source_root"
 - [MAINTENANCE.md](MAINTENANCE.md)：上游审查、补丁准入与发布策略
 - [SECURITY.md](SECURITY.md)：报告安全问题
 - [docs/upstream-reviews.md](docs/upstream-reviews.md)：审查记录
+
+## 商标
+
+DLSS 和 NVIDIA 是 NVIDIA Corporation 的商标。Runeon 与 NVIDIA 没有关联。
 
 ## 许可证
 

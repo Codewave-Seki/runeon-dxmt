@@ -30,6 +30,7 @@ Runeon DXMT は、Runeon が配布する DXMT コンポーネントの公開ソ�
 - Runeon の変更は、ゲーム名、Steam AppID、実行ファイル名で照合することはありません。
 - Production に配布したすべてのコンポーネントには、正確なパッチセットのバンドル、完全な対応ソース、SHA-256 ファイルを含む不変の正式 Release を用意します。候補は Pre-release のままにします。タグと Release のアセットは移動、置換、削除しません。
 - コンポーネントのパッケージ化、署名、配布は Runeon の製品リポジトリが行います。
+- `DXMT_ENABLE_NVEXT=1` のとき、コンポーネントの `nvngx` は DLSS の呼び出しを MetalFX に変換します。`0.80-runeon.9` からは、`DXMT_NVEXT_NGX_PATH` で NGX がコアを読み込むディレクトリを指定できます。Runeon は配布する `nvngx.dll` に独自の Authenticode 署名を付けます。そのためにソースを変更することはありません。
 
 ## 検証とビルド
 
@@ -57,6 +58,10 @@ scripts/integration-check.sh "$source_root"
 - [MAINTENANCE.md](MAINTENANCE.md)：アップストリームのレビュー、パッチの受け入れ基準、リリース方針
 - [SECURITY.md](SECURITY.md)：セキュリティ問題の報告
 - [docs/upstream-reviews.md](docs/upstream-reviews.md)：レビュー記録
+
+## 商標
+
+DLSS および NVIDIA は NVIDIA Corporation の商標です。Runeon は NVIDIA と提携していません。
 
 ## ライセンス
 

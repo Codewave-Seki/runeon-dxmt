@@ -30,6 +30,7 @@ Runeon DXMT is the public source-maintenance repository for the DXMT component t
 - Runeon changes never match game names, Steam AppIDs or executable names.
 - Every component shipped to Production gets an immutable stable Release with the exact patch-set bundle, complete corresponding source and SHA-256 files. Candidates stay Pre-releases. Tags and Release assets are never moved, replaced or deleted.
 - Packaging, signing and distribution of the component are done by the Runeon product repository.
+- With `DXMT_ENABLE_NVEXT=1`, the component's `nvngx` converts DLSS calls to MetalFX. From `0.80-runeon.9`, `DXMT_NVEXT_NGX_PATH` sets the directory NGX loads its core from. Runeon attaches its own Authenticode signature to the shipped `nvngx.dll`; its source is not changed for that.
 
 ## Verify and build
 
@@ -57,6 +58,10 @@ Each Release carries the patch-set bundle, the complete corresponding source and
 - [MAINTENANCE.md](MAINTENANCE.md): upstream review, patch gates and release policy
 - [SECURITY.md](SECURITY.md): reporting security issues
 - [docs/upstream-reviews.md](docs/upstream-reviews.md): review records
+
+## Trademarks
+
+DLSS and NVIDIA are trademarks of NVIDIA Corporation. Runeon is not affiliated with NVIDIA.
 
 ## License
 
