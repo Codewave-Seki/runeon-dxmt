@@ -202,3 +202,13 @@ Admission notes:
 - In a fresh prefix, on both `i386` and `x86_64`, the `SetRotation()` probe for `0104`, the linear texture probe for `0106` and the probes for the backported fixes pass. The `0106` probe covers several widths, tight and padded source pitches, dynamic and staging textures and rows read back after a GPU copy; an 804×256 `R8G8B8A8` texture gets `RowPitch` 3328.
 - Games: the 32-bit D3D11 title that motivated `0104`–`0106` no longer aborts at start-up, no longer stalls periodically with DEP off, and no longer crashes on its texture uploads; another D3D11 title shows no new failure.
 - Not verified: most of the 43 commits individually; geometry and tessellation shader paths, which no probe exercised; and running on macOS 26, because the test machine runs macOS 27.0.1.
+
+### Verification of 0.80-runeon.9
+
+`0.80-runeon.9` is `0.80-runeon.8` on the same base plus the downstream patch `0107`; its rationale is in the commit that added it.
+
+- The series applies to `0df86108` with `git am` and produces the recorded `resultTree`.
+- A complete `x86_64` and `i386` build follows `BUILDING.md`; the tag is on `c9d68a9`. Two independent clones of that commit produce byte-identical patch-set and source bundles.
+- The released `x86_64-windows/nvngx.dll` carries Runeon's Authenticode signature, certificate SHA-256 `c47062133e659af51e2226f781a5856478d5fe1212973b0f877bd4b33fe1aa5b`.
+- Game, on macOS 27.0.1 with runeon-wine `cx26.3-wine11.0-runeon.41` (maintainer's local tests, local build and the released Dev build): with `DXMT_ENABLE_NVEXT` and `DXMT_NVEXT_NGX_PATH` set by the launcher's route, a D3D11 title logged `runeon-dxmt-nvext-ngx-path-1` with that directory, loaded `_nvngx.dll` from it and offered DLSS. Without them the same title enabled no vendor extension and offered no DLSS. Every run exited normally.
+- Not verified: the separate registry probe for `0107`; a comparison against `0.80-runeon.8` on a second D3D11 title; running on macOS 26.
