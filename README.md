@@ -9,7 +9,7 @@ Runeon DXMT is the public source-maintenance repository for the DXMT component t
 ## Baseline and current release
 
 - Upstream base: DXMT `main` at `0df8610` (no upstream release since `v0.80`), pinned in [`base/dxmt-main-0df86108.json`](base/dxmt-main-0df86108.json); `0.80-runeon.6` uses `main` at `3b25259`, pinned in [`base/dxmt-main-3b252590.json`](base/dxmt-main-3b252590.json); `0.80-runeon.5` uses `v0.80` (`589adb7`), pinned in [`base/dxmt-0.80.json`](base/dxmt-0.80.json)
-- Current stable source: [`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8): upstream `main` `0df8610` and 5 Runeon changes, delivered to App `>=1.16 (39)`. Definition in [`patchsets/0.80-runeon.8`](patchsets/0.80-runeon.8/manifest.json)
+- Current stable source: [`0.80-runeon.9`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.9): upstream `main` `0df8610` and 6 Runeon changes, delivered to App `>=1.16 (41)`. Definition in [`patchsets/0.80-runeon.9`](patchsets/0.80-runeon.9/manifest.json)
 - Upstream reviewed through: `0df8610`; see [MAINTENANCE.md](MAINTENANCE.md#review-records)
 
 ## Repository layout
@@ -48,7 +48,8 @@ Each Release carries the patch-set bundle, the complete corresponding source and
 
 | Patch set | State | Status |
 |---|---|---|
-| [`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8) | stable, latest | Current; delivered to App `>=1.16 (39)` |
+| [`0.80-runeon.9`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.9) | stable, latest | Current; delivered to App `>=1.16 (41)` |
+| [`0.80-runeon.8`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.8) | stable | Delivered to App `1.16 (39)`–`1.16 (40)` |
 | [`0.80-runeon.6`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.6) | stable | Delivered to App `1.13 (10)`–`1.16 (38)` |
 | [`0.80-runeon.5`](https://github.com/Codewave-Seki/runeon-dxmt/releases/tag/0.80-runeon.5) | stable | Superseded, retained; built and shipped before this repository existed |
 
